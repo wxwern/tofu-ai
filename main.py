@@ -30,7 +30,9 @@ if __name__ == "__main__":
         print(yesno_qn_count(argv[2]))
 
     elif 'reply' == argv[1] and len(argv) >= 3:
-        print(generate_response(argv[2]))
+        reply = generate_response(argv[2])
+        if reply is not None:
+            print(reply)
 
     elif 'debug' == argv[1]:
         try:

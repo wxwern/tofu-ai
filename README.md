@@ -1,18 +1,25 @@
 # message-autoresponder
 
-An NLTK powered script to allow for automated responses to certain categories of messages.
+An NLTK powered script to allow for random automated responses to certain categories of messages.
+
+It can automatically determine whether a message matches a supported category, and if so craft a response.
+
+Useful for just-for-fun chatbots and the like.
 
 ```bash
-$ ./main.py reply "should i learn to program"
+$ ./main.py reply "hmm i'm bored"
+$ ./main.py reply "is programming a good skill to have"
 yes indeed
+$ ./main.py reply "should i learn it then"
+perhaps
 $
 ```
 
-It identifies itself as 'tofu'.
+It identifies itself as 'tofu', and will attempt to also respond to messages that addresses 'tofu' as the subject. [WIP]
 
 Currently supported:
 - Yes/No inquiries, e.g. "Should I go do my work instead of procastinating?"
-- Random, e.g. "nice"
+- Random, e.g. "nice", ":)"
 
 ## Pre-requisites:
 Install dependencies via pip:
@@ -46,6 +53,8 @@ Query category info:
 ```bash
 $ ./main.py countyn "should i sleep or study" # gets number of separate options that could be answered as yes/no individually
 2
+$ ./main.py countyn "wow that's great"
+0
 $
 ```
 Process chat history (format: `[<datetime>] <user>: <message>`)

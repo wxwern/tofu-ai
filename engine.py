@@ -6,9 +6,9 @@ def yesno_qn_count(s):
     '''Returns the number of yes/no questions being asked in this given string.'''
     token_split = [[]]
     for tok,tag in parse_sentence(s) if isinstance(s, str) else s:
-        if tag != 'DT':
+        if tag not in ('DT', 'RB', 'RBR', 'RBS'):
             token_split[-1].append((tok, tag))
-        if tag == 'CC' or tag == ',':
+        if tag in ('CC', ',', 'LS'):
             token_split.append([])
     count = 0
     prev_chunk = []
@@ -17,14 +17,14 @@ def yesno_qn_count(s):
             typ1 = chunk[0][1]
             typ2 = chunk[1][1]
 
-            typ1_valid = typ1 in ('MD', 'VBP', 'VBZ')
+            typ1_valid = typ1 in ('MD', 'VB', 'VBP', 'VBZ')
 
             if typ1_valid and typ2 == 'VB':
                 #in some cases the detection is incorrectly a verb.
                 #so we might want to see if it can be interpreted as a noun or other valid term.
                 typ2 = parse_sentence(chunk[1][0])[0][1]
 
-            typ2_valid = typ2 in ('PRP', 'PRP$', 'NNS', 'NN', 'NNP', 'NNPS', 'VBG')
+            typ2_valid = typ2 in ('PRP', 'PRP$', 'NNS', 'NN', 'NNP', 'NNPS', 'VBG', 'JJ')
 
             if typ1_valid and typ2_valid:
                 count += 1

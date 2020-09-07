@@ -91,13 +91,13 @@ def generate_response(s):
                 "doubt it",
                 "probably not",
                 "most definitely not",
-                "i think no"
+                "i think no",
                 "not at all",
 
                 "are you sure about that?",
                 "perhaps you might want to think again",
                 "interesting question",
-                "i don't wanna tell you right now"
+                "i don't wanna tell you right now",
                 "i don't have a clue",
                 "hmmm",
                 "my sources cannot be trusted",

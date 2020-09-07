@@ -49,6 +49,15 @@ $ ./main.py reply "hey tofu should i watch a movie or read a book"
 the latter
 $
 ```
+Direct input/output:
+```bash
+$ ./main.py chat # starts a 'chat' interface where the user uses cli input and the responses would be the cli output
+should i stop working on this project
+nah
+hmm very nice
+will this take off
+maybe
+```
 Query category info:
 ```bash
 $ ./main.py countyn "should i sleep or study" # gets number of separate options that could be answered as yes/no individually

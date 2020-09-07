@@ -33,14 +33,28 @@ if __name__ == "__main__":
         reply = generate_response(argv[2])
         if reply is not None:
             print(reply)
+    elif 'chat' == argv[1]:
+        try:
+            while True:
+                if len(argv) > 2:
+                    s = argv[2]
+                else:
+                    s = input()
+                reply = generate_response(s)
+                if reply is not None:
+                    print(reply)
+                if len(argv) > 2:
+                    break
+        except KeyboardInterrupt:
+            pass
 
     elif 'debug' == argv[1]:
         try:
             while True:
-                print("type input:")
                 if len(argv) > 2:
                     s = argv[2]
                 else:
+                    print("type input:")
                     s = input()
                 print("parsed: %s" % str(parse_sentence(s)))
                 print("detected yes-no qns: %d" % yesno_qn_count(s))

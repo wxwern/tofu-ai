@@ -122,18 +122,30 @@ def generate_response(s):
             "this sentence is too complicated for me to understand",
             "hmm",
         ])
+
     elif 'nice' == s.lower():
         if random.uniform(0.0,1.0) > 0.9:
             return 'not nice'
         return 'nice'
+
     elif 'ping' == s.lower():
-        return 'pong'
+        if random.uniform(0.0,1.0) > 0.1:
+            return 'pong'
+
     elif 'pong' == s.lower():
-        return 'ping'
+        if random.uniform(0.0,1.0) > 0.1:
+            return 'ping'
+
+    elif s.lower() in ('hi', 'hello', 'hola', 'hai', 'hoi'):
+        if random.uniform(0.0,1.0) > 0.9:
+            return random.choice(['hello!', 'hi!', 'こんにちは!'])
+
     elif IDENTITY in words:
         if random.uniform(0.0,1.0) > 0.95:
             return random.choice(['hmm i heard my name', 'hmmmm', 'interesting', 'hm'])
+
     elif s in (':D', ':DD', ':DDD', ':)', ':))', ':)))', '(:', ':-)', ':>', ':>>'):
         if random.uniform(0.0,1.0) > 0.9:
             return random.choice([':)', ':D'])
+
     return None

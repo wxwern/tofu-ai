@@ -2,14 +2,19 @@ from nltk.tag import pos_tag
 from nltk.tokenize import word_tokenize
 import random
 
+IDENTITY = 'tofu'
+
 def yesno_qn_count(s):
     '''Returns the number of yes/no questions being asked in this given string.'''
     token_split = [[]]
     for tok,tag in parse_sentence(s) if isinstance(s, str) else s:
         if tag not in ('DT', 'RB', 'RBR', 'RBS'):
             token_split[-1].append((tok, tag))
+
         if tag in ('CC', ',', 'LS'):
-            token_split.append([])
+            if tok.lower() != 'and':
+                token_split.append([])
+
     count = 0
     prev_chunk = []
     for chunk in token_split:
@@ -38,11 +43,15 @@ def yesno_qn_count(s):
     return count
 
 def asking_tofu_yesno_qn_count(s):
-    '''Returns the number of yes/no questions being asked to tofu in this given string. Returns -1 if the string does not address tofu specifically.'''
+    '''
+    Returns the number of yes/no questions being asked to tofu (the subject) in this given string. Returns -1 if the string does not address tofu specifically.
+
+    tofu, the subject name, can be modified.
+    '''
     tokens = parse_sentence(s)
     while len(tokens) > 0 and tokens[0][1] in ('NN', 'NNS'):
         term = tokens[0][0].lower()
-        if 'tofu' in term:
+        if IDENTITY in term:
             return yesno_qn_count(tokens[1:])
         else:
             tokens = tokens[1:]
@@ -64,23 +73,34 @@ def generate_response(s):
             return random.choice([
                 "perhaps",
                 "i believe yes",
-                "maybe",
-                "maybe not",
-                "are you sure about that?",
+                "yeah",
+                "yes",
                 "my deductions indicate yes",
-                "perhaps you might want to think again",
-                "my sources say no",
+                "maybe",
                 "i think so",
+                "very likely",
                 "most definitely",
                 "yes indeed",
                 "i'd say yes",
-                "i don't have a clue",
-                "hmmmm",
-                "my sources... cannot be trusted",
+
+                "maybe not",
+                "my sources say no",
+                "no",
                 "nah",
                 "i don't think so",
                 "doubt it",
                 "probably not",
+                "most definitely not",
+                "i think no"
+                "not at all",
+
+                "are you sure about that?",
+                "perhaps you might want to think again",
+                "interesting question",
+                "i don't wanna tell you right now"
+                "i don't have a clue",
+                "hmmm",
+                "my sources cannot be trusted",
             ])
         if c == 2:
             return random.choice([
@@ -93,14 +113,14 @@ def generate_response(s):
                 "i think neither",
                 "go with the first",
                 "second option",
-                "i sense a potential r/inclusiveor answer, so i'd say yes",
+                "can't decide, so i'll say yes",
             ])
         return random.choice([
             "i'm confused",
             "interesting question",
             "i don't understand what you mean",
             "this sentence is too complicated for me to understand",
-            "hmmm",
+            "hmm",
         ])
     elif 'nice' == s.lower():
         if random.uniform(0.0,1.0) > 0.9:
@@ -110,10 +130,10 @@ def generate_response(s):
         return 'pong'
     elif 'pong' == s.lower():
         return 'ping'
-    elif 'tofu' in words:
+    elif IDENTITY in words:
         if random.uniform(0.0,1.0) > 0.95:
-            return random.choice(['hm i heard my name'])
-    elif s in (':D', ':DD', ':DDD', ':)', ':))', ':)))', '(:', ':-)'):
+            return random.choice(['hmm i heard my name', 'hmmmm', 'interesting', 'hm'])
+    elif s in (':D', ':DD', ':DDD', ':)', ':))', ':)))', '(:', ':-)', ':>', ':>>'):
         if random.uniform(0.0,1.0) > 0.9:
             return random.choice([':)', ':D'])
     return None

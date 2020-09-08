@@ -42,7 +42,7 @@ if __name__ == "__main__":
                     s = input()
                 reply = generate_response(s)
                 if reply is not None:
-                    print(reply)
+                    print(str(reply) + '\n')
                 if len(argv) > 2:
                     break
         except KeyboardInterrupt:

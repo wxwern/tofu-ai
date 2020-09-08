@@ -2,7 +2,11 @@ from nltk.tag import pos_tag
 from nltk.tokenize import word_tokenize
 import random
 
-IDENTITY = 'tofu'
+IDENTITY = 'tofu'.lower()
+
+def is_question(s):
+    #TODO: not implemented
+    return False
 
 def yesno_qn_count(s):
     '''Returns the number of yes/no questions being asked in this given string.'''
@@ -57,16 +61,45 @@ def asking_tofu_yesno_qn_count(s):
             tokens = tokens[1:]
     return -1
 
+def is_tofu_tagged(s):
+    return ('@' + IDENTITY) in s
+
 def parse_sentence(s):
+    s = s.replace('@' + IDENTITY, IDENTITY)
     tokens = list(map(lambda x: 'I' if x == 'i' else x, word_tokenize(s)))
     tagged_tokens = pos_tag(tokens)
     return tagged_tokens
 
+
+__message_combos_cache = {}
+def get_message_combos():
+    if not __message_combos_cache:
+        message_combos = [
+                (['ping'], ['pong'], 0.9),
+                (['pong'], ['ping'], 0.9),
+                (['hi', 'hello', 'helo', 'hallo', 'hola', 'hai', 'hoi'], ['hello!', 'hi!', 'こんにちは!'], 0.1),
+                ([':D', ':DD', ':DDD', ':)', ':))', ':)))', '(:', ':-)', ':>', ':>>'], [':)', ':D'], 0.1),
+        ]
+
+        for words, responses, chance in message_combos:
+            for word in words:
+                __message_combos_cache[word] = (responses, chance)
+
+    return __message_combos_cache
+
+
 def generate_response(s):
     words = word_tokenize(s.lower())
+
+    tofu_tagged = is_tofu_tagged(s)
+    tofu_targeted = tofu_tagged
+
+    #asking_question = is_question(s)
     c = asking_tofu_yesno_qn_count(s)
     if c == -1:
         c = yesno_qn_count(s)
+    else:
+        tofu_targeted = True
 
     if c > 0:
         if c == 1:
@@ -122,30 +155,14 @@ def generate_response(s):
             "this sentence is too complicated for me to understand",
             "hmm",
         ])
-
-    elif 'nice' == s.lower():
-        if random.uniform(0.0,1.0) > 0.9:
-            return 'not nice'
-        return 'nice'
-
-    elif 'ping' == s.lower():
-        if random.uniform(0.0,1.0) > 0.1:
-            return 'pong'
-
-    elif 'pong' == s.lower():
-        if random.uniform(0.0,1.0) > 0.1:
-            return 'ping'
-
-    elif s.lower() in ('hi', 'hello', 'hola', 'hai', 'hoi'):
-        if random.uniform(0.0,1.0) > 0.9:
-            return random.choice(['hello!', 'hi!', 'こんにちは!'])
-
-    elif IDENTITY in words:
-        if random.uniform(0.0,1.0) > 0.95:
+    elif not tofu_targeted and IDENTITY in words or IDENTITY == s.lower():
+        if random.random() <= 0.1:
             return random.choice(['hmm i heard my name', 'hmmmm', 'interesting', 'hm'])
-
-    elif s in (':D', ':DD', ':DDD', ':)', ':))', ':)))', '(:', ':-)', ':>', ':>>'):
-        if random.uniform(0.0,1.0) > 0.9:
-            return random.choice([':)', ':D'])
+    elif len(words) <= 5:
+        combos = get_message_combos()
+        for word in words:
+            if word in combos:
+                if tofu_tagged or random.random() <= combos[word][1]:
+                    return random.choice(combos[word][0])
 
     return None

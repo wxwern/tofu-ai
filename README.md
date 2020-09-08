@@ -19,6 +19,7 @@ It identifies itself as 'tofu', and will attempt to also respond to messages tha
 
 Currently supported:
 - Yes/No inquiries, e.g. "Should I go do my work instead of procastinating?"
+- Selecting an option from a pair of options, e.g. "Should I sleep or study?"
 - Random, e.g. "nice", ":)"
 
 ## Pre-requisites:

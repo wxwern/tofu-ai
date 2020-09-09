@@ -12,7 +12,7 @@ def yesno_qn_count(s):
     '''Returns the number of yes/no questions being asked in this given string.'''
     token_split = [[]]
     for tok,tag in parse_sentence(s) if isinstance(s, str) else s:
-        if tag not in ('DT', 'RB', 'RBR', 'RBS'):
+        if tag not in ('RB', 'RBR', 'RBS'):
             token_split[-1].append((tok, tag))
 
         if tag in ('CC', ',', 'LS'):
@@ -33,7 +33,7 @@ def yesno_qn_count(s):
                 #so we might want to see if it can be interpreted as a noun or other valid term.
                 typ2 = parse_sentence(chunk[1][0])[0][1]
 
-            typ2_valid = typ2 in ('PRP', 'PRP$', 'NNS', 'NN', 'NNP', 'NNPS', 'VBG', 'JJ')
+            typ2_valid = typ2 in ('PRP', 'PRP$', 'NNS', 'NN', 'NNP', 'NNPS', 'VBG', 'JJ', 'DT')
 
             if typ1_valid and typ2_valid:
                 count += 1
@@ -46,6 +46,17 @@ def yesno_qn_count(s):
 
     return count
 
+def tofu_called_and_nothing_else(s):
+    tokens = parse_sentence(s)
+    count = 0
+    found = False
+    while count < len(tokens) and tokens[count][1] in ('JJ', 'NN', 'NNS', 'NNP', 'NNPS'):
+        count += 1
+        if IDENTITY.lower() in tokens[0][0].lower():
+            found = True
+    return found and len(tokens) == count
+
+
 def asking_tofu_yesno_qn_count(s):
     '''
     Returns the number of yes/no questions being asked to tofu (the subject) in this given string. Returns -1 if the string does not address tofu specifically.
@@ -53,18 +64,20 @@ def asking_tofu_yesno_qn_count(s):
     tofu, the subject name, can be modified.
     '''
     tokens = parse_sentence(s)
-    while len(tokens) > 0 and tokens[0][1] in ('NN', 'NNS'):
+    while len(tokens) > 0 and tokens[0][1] in ('NN', 'NNS', 'NNP', 'NNPS'):
         term = tokens[0][0].lower()
-        if IDENTITY in term:
+        if IDENTITY.lower() in term.lower():
             return yesno_qn_count(tokens[1:])
         else:
             tokens = tokens[1:]
     return -1
 
 def is_tofu_tagged(s):
-    return ('@' + IDENTITY) in s
+    return ('@' + IDENTITY.lower()) in s.lower()
 
 def parse_sentence(s):
+    if isinstance(s, list):
+        return s
     s = s.replace('@' + IDENTITY, IDENTITY)
     tokens = list(map(lambda x: 'I' if x == 'i' else x, word_tokenize(s)))
     tagged_tokens = pos_tag(tokens)
@@ -77,8 +90,8 @@ def get_message_combos():
         message_combos = [
                 (['ping'], ['pong'], 0.9),
                 (['pong'], ['ping'], 0.9),
-                (['hi', 'hello', 'helo', 'hallo', 'hola', 'hai', 'hoi'], ['hello!', 'hi!', 'こんにちは!'], 0.1),
-                ([':D', ':DD', ':DDD', ':)', ':))', ':)))', '(:', ':-)', ':>', ':>>'], [':)', ':D'], 0.1),
+                (['hi', 'hello', 'helo', 'hallo', 'hola', 'hai', 'hoi'], ['hello!', 'hi!', 'こんにちは!'], 0.3),
+                ([':D', ':DD', ':DDD', ':)', ':))', ':)))', '(:', ':-)', ':>', ':>>'], [':)', ':D'], 0.3),
         ]
 
         for words, responses, chance in message_combos:
@@ -95,11 +108,15 @@ def generate_response(s):
     tofu_targeted = tofu_tagged
 
     #asking_question = is_question(s)
-    c = asking_tofu_yesno_qn_count(s)
+    parsed_s = parse_sentence(s)
+    c = asking_tofu_yesno_qn_count(parsed_s)
     if c == -1:
-        c = yesno_qn_count(s)
+        c = yesno_qn_count(parsed_s)
     else:
         tofu_targeted = True
+
+    #if tofu_called_and_nothing_else(s):
+    #    pass #TODO: greet
 
     if c > 0:
         if c == 1:
@@ -127,8 +144,8 @@ def generate_response(s):
                 "i think no",
                 "not at all",
 
-                "are you sure about that?",
-                "perhaps you might want to think again",
+                "i'm not sure about that",
+                "bleh",
                 "interesting question",
                 "i don't wanna tell you right now",
                 "i don't have a clue",
@@ -155,9 +172,8 @@ def generate_response(s):
             "this sentence is too complicated for me to understand",
             "hmm",
         ])
-    elif not tofu_targeted and IDENTITY in words or IDENTITY == s.lower():
-        if random.random() <= 0.1:
-            return random.choice(['hmm i heard my name', 'hmmmm', 'interesting', 'hm'])
+    elif not tofu_targeted and (IDENTITY.lower() in words or IDENTITY.lower() == s.lower()) and random.random() <= 0.1:
+        return random.choice(['hmm i heard my name', 'hmmmm', 'interesting', 'hm'])
     elif len(words) <= 5:
         combos = get_message_combos()
         for word in words:

@@ -58,8 +58,11 @@ if __name__ == "__main__":
                 else:
                     print("type input:")
                     s = input()
+                c = asking_tofu_yesno_qn_count(s)
+                if c == -1:
+                    c = yesno_qn_count(s)
                 print("parsed: %s" % str(parse_sentence(s)))
-                print("detected yes-no qns: %d" % yesno_qn_count(s))
+                print("detected yes-no qns: %d" % c)
                 print("response: %s\n" % generate_response(s))
                 if len(argv) > 2:
                     break

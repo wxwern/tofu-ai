@@ -3,6 +3,8 @@ import datetime
 import random
 import math
 
+from sentiment_analysis import getSentencePositivity
+
 class Sentience:
 
     @staticmethod
@@ -40,7 +42,7 @@ class Sentience:
         """
         Returns exposed positivity over time from messages.
         Exposed positivity decays with a half life of 1 minute.
-        Output ranges from [-0.5, 1.0].
+        Output ranges from [-1.0, 1.0].
         """
 
         #half life factor
@@ -71,9 +73,10 @@ class Sentience:
             except:
                 return 0
 
-        #TODO: Implement sentiment analysis
-        result = random.uniform(-1.0,1.0)
-        return result
+        if not message.strip():
+            return 0.0
+
+        return getSentencePositivity(message)
 
     @staticmethod
     def determineResponseAgreeability(message_positivity=0.0):
@@ -103,7 +106,7 @@ class Sentience:
 
     @staticmethod
     def getDebugInfo():
-        return "Current Mood         : %6.1f%%;\nMood Stability       : %6.1f%%;\nExposed Positivity   : %6.1f%%;" % \
+        return "Current Mood          : %6.1f%%;\nMood Stability        : %6.1f%%;\nExposed Positivity    : %6.1f%%;" % \
             (Sentience.getPrimaryMood()*100, Sentience.getMoodStability()*100, Sentience.getExposedPositivity()*100)
 
     @staticmethod
@@ -111,7 +114,7 @@ class Sentience:
         ori_pos = Sentience.determineMessagePositivity(message)
         res_pos = Sentience.determineResponseAgreeability(message_positivity=ori_pos)
 
-        return "%s\nOrigin Msg Positivity: %6.1f%%;\nAgrees with Origin   : %6.1f%%;" % \
+        return "%s\nOrigin Msg Positivity : %6.1f%%;\nAgrees w/ Origin      : %6.1f%%;" % \
             (Sentience.getDebugInfo(), ori_pos*100, res_pos*100)
 
 if __name__ == "__main__" :

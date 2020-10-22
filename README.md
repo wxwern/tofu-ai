@@ -3,9 +3,6 @@
 An NLTK powered script to allow for random automated responses to certain categories of messages.
 
 It can automatically determine whether a message matches a supported category, and if so craft a response.
-
-Useful for just-for-fun chatbots and the like.
-
 ```bash
 $ ./main.py reply "hmm i'm bored"
 $ ./main.py reply "is programming a good skill to have"
@@ -15,11 +12,26 @@ perhaps
 $
 ```
 
+It also attempts to recognise whether a message is positive or not, and usually provide a reply that turns it positive. For example:
+```bash
+$ ./main.py "did i screw up for my exams"
+nah
+$ ./main.py "is today a good day"
+most definitely
+```
+Be careful, it sometimes has mood swings, and if exposed to too much negative messages, it may become negative as well!
+
+
+Useful for just-for-fun chatbots and the like.
+
 It identifies itself as 'tofu', and will attempt to also respond to messages that addresses 'tofu' as the subject. [WIP]
 
 Currently supported:
 - Yes/No inquiries, e.g. "Should I go do my work instead of procastinating?"
 - Selecting an option from a pair of options, e.g. "Should I sleep or study?"
+- Ability to recognise sentence sentiment and provide a positive response.
+- It has its own mood at any point in time and can have mood swings.
+- Can be affected by positivity/negativity of exposed messages.
 - Random, e.g. "nice", ":)"
 
 ## Pre-requisites:
@@ -33,7 +45,13 @@ Run in python3:
 import nltk
 nltk.download('punkt')
 nltk.download('wordnet')
+nltk.download('stopwords')
 nltk.download('averaged_perceptron_tagger')
+```
+
+If you intend to train your own sentiment classifier, also do the following:
+```
+nltk.download('twitter_samples')
 ```
 
 ## Usage
@@ -77,4 +95,9 @@ would it rain today
 * BOT tofu2 (emulated autoreply):
 nah
 
+```
+
+Retrain Sentiment Analysis Model:
+```bash
+$ python3 sentiment_analysis.py
 ```

@@ -187,6 +187,10 @@ def generate_response(s):
                 rnd_tri= random.uniform(0.0, factor)
                 if rnd_tri > 0.5:
                     return rnd_opt
+                elif agreeability > 0.15:
+                    return yes_opt
+                elif agreeability < -0.15:
+                    return no_opt
                 else:
                     return random.choice([yes_opt, no_opt])
 

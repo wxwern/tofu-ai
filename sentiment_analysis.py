@@ -5,17 +5,21 @@ from nltk.tokenize import word_tokenize
 from nltk import FreqDist, classify, NaiveBayesClassifier
 import re, string, random
 import pickle
+import os
+
 stop_words = stopwords.words('english')
 
 def saveClassifier(classifier):
-    f = open('sentiment_classifier.pickle', 'wb')
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'sentiment_classifier.pickle')
+    f = open(path, 'wb')
     pickle.dump(classifier, f)
     f.close()
 
 def loadClassifier():
     global __classifier
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'sentiment_classifier.pickle')
     try:
-        f = open('sentiment_classifier.pickle', 'rb')
+        f = open(path, 'rb')
         __classifier = pickle.load(f)
         f.close()
     except:
@@ -26,44 +30,32 @@ loadClassifier()
 def __getClassifier():
     return __classifier
 
-def isWordPositive(word):
-    classifier = __getClassifier()
-    if classifier is None:
-        return False
-    custom_tokens = __remove_noise([word])
-    return __classifier.classify(dict([token, True] for token in custom_tokens)) == 'Positive'
-
-def isSentencePositive(sentence):
-    classifier = __getClassifier()
-    if classifier is None:
-        return False
-    custom_tokens = __remove_noise(word_tokenize(sentence))
-    return classifier.classify(dict([token, True] for token in custom_tokens)) == 'Positive'
-
 def getSentencePositivity(sentence):
+    """
+    Returns positivity of the given sentence from -1.0 (very negative) to 1.0 (very positive).
+    May return None if no classifier exists to perform sentiment analysis.
+    """
     classifier = __getClassifier()
     if classifier is None:
-        #fallback to random if without training data
-        return random.uniform(-1.0, 1.0)
+        return None
 
-    pos = 0
-    total = 0
-    for word in word_tokenize(sentence):
-        if word.lower() in stop_words:
-            continue
+    #prepare for classifier
+    tokenized = word_tokenize(sentence)
+    custom_tokens = __remove_noise(tokenized)
 
-        if isWordPositive(word):
-            pos += 1
-        total += 1
+    #classify and get probability
+    probdist = classifier.prob_classify(dict([token, True] for token in custom_tokens))
+    pos = probdist.prob('Positive')
+    normalized_pos = pos * 2 - 1
 
-    if total == 0:
-        return 0.0
+    #handle negation
+    negation = len(list(filter(lambda x: x[1] == 'RB', pos_tag(tokenized)))) > 0
+    if negation:
+        #invert with lower magnitude if negation is detected in sentence
+        normalized_pos *= -0.2
 
-    if total <= 1 or isSentencePositive(sentence):
-        return pos/total
-    else:
-        return -(1-pos/total)
-
+    #return result
+    return normalized_pos
 
 def __remove_noise(tweet_tokens, stop_words = ()):
 

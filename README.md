@@ -19,7 +19,7 @@ nah
 $ ./main.py "is today a good day"
 most definitely
 ```
-Be careful, it sometimes has mood swings, and if exposed to too much negative messages, it may become negative as well!
+Be careful, it sometimes has mood swings, and if exposed to too much negativity, it may become negative as well!
 
 
 Useful for just-for-fun chatbots and the like.

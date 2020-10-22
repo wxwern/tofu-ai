@@ -13,14 +13,14 @@ class Sentience:
         now = datetime.datetime.now()
 
         # sin curve, best mood during noon 2pm, worst mood during midnight 2am.
-        time_offset = max(0.0, min(((now.hour*60 + now.minute + 120) % 1440)/(1440), 1.0))
+        time_offset = max(0.0, min(((now.hour*60 + now.minute - 120) % 1440)/(1440), 1.0))
         time_moodadj = math.sin(time_offset*math.pi)
 
         # approximately monthly cos curve where middle of the month is moody
         date_offset = max(0.0, min(((now.month-1)*30 + (now.day-1))/360, 1.0))
         date_moodadj = math.cos(date_offset*(12*math.pi))
 
-        mood = 0.3 + date_moodadj*0.3 + time_moodadj*0.4
+        mood = 0.1 + date_moodadj*0.3 + time_moodadj*0.6
         return mood
 
     @staticmethod
@@ -31,7 +31,7 @@ class Sentience:
         """
         now = datetime.datetime.now()
         random.seed(int((now.month-1)*30 + (now.day-1) + 1))
-        ans = random.uniform(0.0,0.5) + random.uniform(0.3,0.5)
+        ans = random.uniform(0.1,0.6) + random.uniform(0.1,0.4)
         random.seed(time.time())
         return ans
 
@@ -91,6 +91,10 @@ class Sentience:
         if isinstance(message_positivity, str):
             message_positivity = Sentience.determineMessagePositivity(message_positivity)
 
+        if message_positivity is None:
+            random.seed(time.time())
+            message_positivity = random.uniform(-1.0,1.0)
+
         Sentience._addExposedPositivity(message_positivity)
 
         #compute random deviation from current time
@@ -106,7 +110,7 @@ class Sentience:
 
     @staticmethod
     def getDebugInfo():
-        return "Current Mood          : %6.1f%%;\nMood Stability        : %6.1f%%;\nExposed Positivity    : %6.1f%%;" % \
+        return "Current Mood Positivity : %6.1f%%;\nMood Stability          : %6.1f%%;\nExposed Positivity      : %6.1f%%;" % \
             (Sentience.getPrimaryMood()*100, Sentience.getMoodStability()*100, Sentience.getExposedPositivity()*100)
 
     @staticmethod
@@ -114,8 +118,12 @@ class Sentience:
         ori_pos = Sentience.determineMessagePositivity(message)
         res_pos = Sentience.determineResponseAgreeability(message_positivity=ori_pos)
 
-        return "%s\nOrigin Msg Positivity : %6.1f%%;\nAgrees w/ Origin      : %6.1f%%;" % \
-            (Sentience.getDebugInfo(), ori_pos*100, res_pos*100)
+        if ori_pos == None:
+            return "%s\nOrigin Msg Positivity   : ERROR_CLASSIFIER_MISSING;\nAgrees w/ Origin        : %6.1f%%;" % \
+                (Sentience.getDebugInfo(), res_pos*100)
+        else:
+            return "%s\nOrigin Msg Positivity   : %6.1f%%;\nAgrees w/ Origin        : %6.1f%%;" % \
+                (Sentience.getDebugInfo(), ori_pos*100, res_pos*100)
 
 if __name__ == "__main__" :
     print(Sentience.getDebugMoodInfo())

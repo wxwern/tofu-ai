@@ -1,5 +1,6 @@
 from nltk.tag import pos_tag
 from nltk.tokenize import word_tokenize
+from positivity import Sentience
 import random
 
 IDENTITY = 'tofu'.lower()
@@ -26,7 +27,7 @@ def yesno_qn_count(s):
             typ1 = chunk[0][1]
             typ2 = chunk[1][1]
 
-            typ1_valid = typ1 in ('MD', 'VB', 'VBP', 'VBZ')
+            typ1_valid = typ1 in ('MD', 'VB', 'VBP', 'VBZ', 'VBD')
 
             if typ1_valid and typ2 == 'VB':
                 #in some cases the detection is incorrectly a verb.
@@ -102,6 +103,21 @@ def get_message_combos():
 
 
 def generate_response(s):
+
+    D_STRUCTURE = s.startswith("!DEBUG_STRUCTURE")
+    D_SENTIENCE = s.startswith("!DEBUG_SENTIENCE")
+
+    if s.startswith("!DEBUG"):
+        s = s[16:].strip()
+
+    if D_SENTIENCE:
+        x = Sentience.getDebugInfoAfterMessage(s).replace('\n',' ')
+        x2 = ' '
+        for c in x:
+            if c != ' ' or x2[-1] != ' ':
+                x2 += c
+        return x2.strip()
+
     words = word_tokenize(s.lower())
 
     tofu_tagged = is_tofu_tagged(s)
@@ -109,18 +125,25 @@ def generate_response(s):
 
     #asking_question = is_question(s)
     parsed_s = parse_sentence(s)
+
+    if D_STRUCTURE:
+        return str(parsed_s)
+
     c = asking_tofu_yesno_qn_count(parsed_s)
     if c == -1:
         c = yesno_qn_count(parsed_s)
     else:
         tofu_targeted = True
 
+    agreeability = Sentience.determineResponseAgreeability(s)
+
     #if tofu_called_and_nothing_else(s):
     #    pass #TODO: greet
 
     if c > 0:
         if c == 1:
-            return random.choice([
+
+            yes_opt = random.choice([
                 "perhaps",
                 "i believe yes",
                 "yeah",
@@ -132,7 +155,8 @@ def generate_response(s):
                 "most definitely",
                 "yes indeed",
                 "i'd say yes",
-
+            ])
+            no_opt = random.choice([
                 "maybe not",
                 "my sources say no",
                 "no",
@@ -143,7 +167,8 @@ def generate_response(s):
                 "most definitely not",
                 "i think no",
                 "not at all",
-
+            ])
+            rnd_opt = random.choice([
                 "i'm not sure about that",
                 "bleh",
                 "interesting question",
@@ -152,6 +177,19 @@ def generate_response(s):
                 "hmmm",
                 "my sources cannot be trusted",
             ])
+
+            if agreeability > 0.3:
+                return yes_opt
+            elif agreeability < -0.3:
+                return no_opt
+            else:
+                factor = 1-(abs(agreeability))/0.3
+                rnd_tri= random.uniform(0.0, factor)
+                if rnd_tri > 0.5:
+                    return rnd_opt
+                else:
+                    return random.choice([yes_opt, no_opt])
+
         if c == 2:
             return random.choice([
                 "first option",

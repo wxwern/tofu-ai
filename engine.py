@@ -116,7 +116,7 @@ def generate_response(s):
         for c in x:
             if c != ' ' or x2[-1] != ' ':
                 x2 += c
-        return x2.strip()
+        return '`' + x2.replace(' :', ':').strip() + '`'
 
     words = word_tokenize(s.lower())
 
@@ -126,16 +126,17 @@ def generate_response(s):
     #asking_question = is_question(s)
     parsed_s = parse_sentence(s)
 
-    if D_STRUCTURE:
-        return str(parsed_s)
-
     c = asking_tofu_yesno_qn_count(parsed_s)
     if c == -1:
         c = yesno_qn_count(parsed_s)
     else:
         tofu_targeted = True
 
+    if D_STRUCTURE:
+        return '`Yes/No Qn: %d; Sentence Structure: %s`' % (c, str(parsed_s))
+
     agreeability = Sentience.determineResponseAgreeability(s)
+
 
     #if tofu_called_and_nothing_else(s):
     #    pass #TODO: greet

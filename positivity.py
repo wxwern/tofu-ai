@@ -79,6 +79,11 @@ class Sentience:
         return getSentencePositivity(message)
 
     @staticmethod
+    def preloadPositivityClassifier():
+        """Preloads the classifier used to determine whether a sentence is positive or negative."""
+        getSentencePositivity("dummy text")
+
+    @staticmethod
     def determineResponseAgreeability(message_positivity=0.0):
         """
         Returns how much to 'agree' with a message received with the given positivity (defaults to neutral).
@@ -115,6 +120,10 @@ class Sentience:
 
     @staticmethod
     def getDebugInfoAfterMessage(message):
+        if not message.strip():
+            return "%s\nOrigin Msg Positivity   : N/A;\nAgrees w/ Origin        : N/A;" % \
+                (Sentience.getDebugInfo())
+
         ori_pos = Sentience.determineMessagePositivity(message)
         res_pos = Sentience.determineResponseAgreeability(message_positivity=ori_pos)
 
@@ -125,5 +134,7 @@ class Sentience:
             return "%s\nOrigin Msg Positivity   : %6.1f%%;\nAgrees w/ Origin        : %6.1f%%;" % \
                 (Sentience.getDebugInfo(), ori_pos*100, res_pos*100)
 
+Sentience.preloadPositivityClassifier()
+
 if __name__ == "__main__" :
-    print(Sentience.getDebugMoodInfo())
+    print(Sentience.getDebugInfo())

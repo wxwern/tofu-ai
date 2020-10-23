@@ -14,9 +14,9 @@ $
 
 It also attempts to recognise whether a message is positive or not, and usually provide a reply that turns it positive. For example:
 ```bash
-$ ./main.py "did i screw up for my exams"
+$ ./main.py reply "did i screw up for my exams"
 nah
-$ ./main.py "is today a good day"
+$ ./main.py reply "is today a good day"
 most definitely
 ```
 Be careful, it sometimes has mood swings, and if exposed to too much negativity, it may become negative as well!
@@ -33,6 +33,7 @@ Currently supported:
 - It has its own mood at any point in time and can have mood swings.
 - Can be affected by positivity/negativity of exposed messages.
 - Random, e.g. "nice", ":)"
+
 
 ## Pre-requisites:
 Install dependencies via pip:
@@ -56,6 +57,8 @@ nltk.download('twitter_samples')
 
 ## Usage
 
+Note that the script takes some time to initialise. If you use any options without a second argument, the command line interface can be used. In this case, all responses are instantaneous after the initialisation.
+
 Replies:
 ```bash
 $ ./main.py reply "should i go for a walk"
@@ -78,6 +81,9 @@ hmm very nice
 will this take off
 maybe
 ```
+
+\* When using `chat`, one line of input always corresponds to one line of output, so you can use standard input and output to process live data.
+
 Query category info:
 ```bash
 $ ./main.py countyn "should i sleep or study" # gets number of separate options that could be answered as yes/no individually

@@ -42,7 +42,7 @@ def getSentencePositivity(sentence):
         return None
 
     #prepare for classifier
-    tokenized = word_tokenize(sentence)
+    tokenized = list(map(lambda x: 'I' if x == 'i' else x, word_tokenize(sentence)))
     custom_tokens = __remove_noise(tokenized)
 
     #classify and get probability
@@ -51,10 +51,8 @@ def getSentencePositivity(sentence):
     normalized_pos = pos * 2 - 1
 
     #handle negation
-    negation = len(list(filter(lambda x: x[1] == 'RB', pos_tag(tokenized)))) > 0
-    if negation:
-        #invert with lower magnitude if negation is detected in sentence
-        normalized_pos *= -0.2
+    negation_count = len(list(filter(lambda x: x[1] == 'RB', pos_tag(tokenized))))
+    normalized_pos *= (-0.2)**negation_count #invert with lower magnitude if negation is detected in sentence
 
     #return result
     return normalized_pos

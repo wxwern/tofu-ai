@@ -9,7 +9,10 @@ class Sentience:
 
     @staticmethod
     def getPrimaryMood():
-        """Returns primary mood as of the current time. Ranges between [0.0, 1.0], with 0.0 being neutral and 1.0 being very happy"""
+        """
+        Returns primary mood as of the current time.
+        Ranges between [-1.0, 1.0], with -1.0 being very sad/annoyed/mad, 0.0 being neutral and 1.0 being very happy
+        """
         now = datetime.datetime.now()
 
         # sin curve, best mood during noon 2pm, worst mood during midnight 2am.

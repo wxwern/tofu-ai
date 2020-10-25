@@ -51,7 +51,7 @@ def getSentencePositivity(sentence):
     normalized_pos = pos * 2 - 1
 
     #handle negation
-    negation_count = len(list(filter(lambda x: x[1] == 'RB', pos_tag(tokenized))))
+    negation_count = len(list(filter(lambda x: x[1] == 'RB' and x[0] in ("not", "n't"), pos_tag(tokenized))))
     normalized_pos *= (-0.2)**negation_count #invert with lower magnitude if negation is detected in sentence
 
     #return result

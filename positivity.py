@@ -7,6 +7,11 @@ from sentiment_analysis import getSentencePositivity
 
 class Sentience:
 
+    __IDENTITY = 'tofu'
+    def getIdentity():
+        """Returns identity of script, the name it goes by. This should be a single word."""
+        return Sentience.__IDENTITY.lower()
+
     @staticmethod
     def getPrimaryMood():
         """
@@ -23,10 +28,10 @@ class Sentience:
         date_offset = max(0.0, min(((now.month-1)*30 + (now.day-1))/360, 1.0))
         date_moodadj = math.cos(date_offset*(12*math.pi))
 
-        # recompute exposed positivity as exponential of degree 3
-        exp_pos = (Sentience.getExposedPositivity()**3)
+        # recompute exposed positivity as exponential of degree 3, adjustable by how stable the mood is
+        exp_pos = (Sentience.getExposedPositivity()**3) * (1-Sentience.getMoodStability())
 
-        mood = 0.1 + date_moodadj*0.3 + time_moodadj*0.6 + exp_pos*0.2*(1-Sentience.getMoodStability())
+        mood = 0.1 + date_moodadj*0.3 + time_moodadj*0.6 + exp_pos*0.2
         return max(-1.0, min(mood, 1.0))
 
     @staticmethod
@@ -76,7 +81,9 @@ class Sentience:
         Returns whether there is too much exposed positivity.
         When this is True, most gained positivity and negativity will have minimal effect on the final exposed positivity.
         """
-        Sentience.getExposedPositivity()
+
+        Sentience.getExposedPositivity() #preprocess current positivity, which will update whether positivity overload is in effect
+
         return Sentience.__positivity_overload
 
     @staticmethod

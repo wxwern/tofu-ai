@@ -1,89 +1,12 @@
 from nltk.tag import pos_tag
 from nltk.tokenize import word_tokenize
+
 from positivity import Sentience
+from queries import *
+
 import random
 
-IDENTITY = 'tofu'.lower()
-
-def is_question(s):
-    #TODO: not implemented
-    return False
-
-def yesno_qn_count(s):
-    '''Returns the number of yes/no questions being asked in this given string.'''
-    token_split = [[]]
-    for tok,tag in parse_sentence(s) if isinstance(s, str) else s:
-        if tag not in ('RB', 'RBR', 'RBS'):
-            token_split[-1].append((tok, tag))
-
-        if tag in ('CC', ',', 'LS'):
-            if tok.lower() != 'and':
-                token_split.append([])
-
-    count = 0
-    prev_chunk = []
-    for chunk in token_split:
-        if len(chunk) >= 2:
-            typ1 = chunk[0][1]
-            typ2 = chunk[1][1]
-
-            typ1_valid = typ1 in ('MD', 'VB', 'VBP', 'VBZ', 'VBD')
-
-            if typ1_valid and typ2 == 'VB':
-                #in some cases the detection is incorrectly a verb.
-                #so we might want to see if it can be interpreted as a noun or other valid term.
-                typ2 = parse_sentence(chunk[1][0])[0][1]
-
-            typ2_valid = typ2 in ('PRP', 'PRP$', 'NNS', 'NN', 'NNP', 'NNPS', 'VBG', 'JJ', 'DT')
-
-            if typ1_valid and typ2_valid:
-                count += 1
-                prev_chunk = chunk
-                continue
-
-        if len(prev_chunk) > 0 and prev_chunk[-1][0].lower() == 'or' and count > 0:
-            count += 1
-        prev_chunk = chunk
-
-    return count
-
-def tofu_called_and_nothing_else(s):
-    tokens = parse_sentence(s)
-    count = 0
-    found = False
-    while count < len(tokens) and tokens[count][1] in ('JJ', 'NN', 'NNS', 'NNP', 'NNPS'):
-        count += 1
-        if IDENTITY.lower() in tokens[0][0].lower():
-            found = True
-    return found and len(tokens) == count
-
-
-def asking_tofu_yesno_qn_count(s):
-    '''
-    Returns the number of yes/no questions being asked to tofu (the subject) in this given string. Returns -1 if the string does not address tofu specifically.
-
-    tofu, the subject name, can be modified.
-    '''
-    tokens = parse_sentence(s)
-    while len(tokens) > 0 and tokens[0][1] in ('NN', 'NNS', 'NNP', 'NNPS'):
-        term = tokens[0][0].lower()
-        if IDENTITY.lower() in term.lower():
-            return yesno_qn_count(tokens[1:])
-        else:
-            tokens = tokens[1:]
-    return -1
-
-def is_tofu_tagged(s):
-    return ('@' + IDENTITY.lower()) in s.lower()
-
-def parse_sentence(s):
-    if isinstance(s, list):
-        return s
-    s = s.replace('@' + IDENTITY, IDENTITY)
-    tokens = list(map(lambda x: 'I' if x == 'i' else x, word_tokenize(s)))
-    tagged_tokens = pos_tag(tokens)
-    return tagged_tokens
-
+IDENTITY = Sentience.getIdentity()
 
 __message_combos_cache = {}
 def get_message_combos():
@@ -100,7 +23,6 @@ def get_message_combos():
                 __message_combos_cache[word] = (responses, chance)
 
     return __message_combos_cache
-
 
 def generate_response(s):
 

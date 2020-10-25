@@ -23,8 +23,11 @@ class Sentience:
         date_offset = max(0.0, min(((now.month-1)*30 + (now.day-1))/360, 1.0))
         date_moodadj = math.cos(date_offset*(12*math.pi))
 
-        mood = 0.1 + date_moodadj*0.3 + time_moodadj*0.6
-        return mood
+        # recompute exposed positivity as exponential of degree 3
+        exp_pos = (Sentience.getExposedPositivity()**3)
+
+        mood = 0.1 + date_moodadj*0.3 + time_moodadj*0.6 + exp_pos*0.2*(1-Sentience.getMoodStability())
+        return max(-1.0, min(mood, 1.0))
 
     @staticmethod
     def getMoodStability():
@@ -38,31 +41,58 @@ class Sentience:
         random.seed(time.time())
         return ans
 
-    exposed_positivity = 0.0
-    last_message_exposure = 0.0
+    __exposed_positivity = 0.0
+    __last_message_exposure = 0.0
+    __positivity_overload = False
     @staticmethod
-    def getExposedPositivity():
+    def getExposedPositivity(unlimited=False):
         """
         Returns exposed positivity over time from messages.
-        Exposed positivity decays with a half life of 1 minute.
-        Output ranges from [-1.0, 1.0].
+
+        Exposed positivity decays with varying half life. As a rule of thumb, negativity decays slower than positivity.
+
+        Output ranges is capped between [-1.0, 1.0], unless the unlimited argument is set to True.
         """
 
-        #half life factor
-        factor = max(0.0, min(2**min(0.0, (Sentience.last_message_exposure - time.time())/60), 1.0))
+        if Sentience.__positivity_overload:
+            Sentience.__exposed_positivity = -abs(Sentience.__exposed_positivity)
+
+        #half life factor computation
+        half_life_ctrl = 0.3 if Sentience.__positivity_overload else (0.5 if Sentience.__exposed_positivity < 0 else 1.2)
+        half_life_factor = max(0.0, min(2**(min(0.0, (Sentience.__last_message_exposure - time.time())/60)*half_life_ctrl), 1.0))
 
         #recompute current exposed positivity
-        Sentience.exposed_positivity = max(-1.0, min(Sentience.exposed_positivity, 1.0))*factor
-        Sentience.last_message_exposure = time.time()
+        Sentience.__exposed_positivity = max(-1.5, min(Sentience.__exposed_positivity, 2.0)) * half_life_factor
+        Sentience.__last_message_exposure = time.time()
 
-        return Sentience.exposed_positivity
+        if Sentience.__exposed_positivity > -0.5:
+            Sentience.__positivity_overload = False
+
+        return Sentience.__exposed_positivity if unlimited else max(-1.0, min(Sentience.__exposed_positivity, 1.0))
+
+    @staticmethod
+    def isExposedPositivityOverloaded():
+        """
+        Returns whether there is too much exposed positivity.
+        When this is True, most gained positivity and negativity will have minimal effect on the final exposed positivity.
+        """
+        Sentience.getExposedPositivity()
+        return Sentience.__positivity_overload
 
     @staticmethod
     def _addExposedPositivity(x):
         """
         Updates exposed positivity value.
         """
-        Sentience.exposed_positivity = Sentience.getExposedPositivity() + x*0.3
+        current_pos = Sentience.getExposedPositivity(unlimited=True)
+        if not Sentience.__positivity_overload:
+            current_pos += x*0.25
+        else:
+            current_pos += -abs(max(-0.05, min(x*0.25, 0.001)))
+
+        Sentience.__exposed_positivity = current_pos
+        if Sentience.__exposed_positivity > 0.8 + Sentience.getMoodStability():
+            Sentience.__positivity_overload = True
 
     @staticmethod
     def determineMessagePositivity(message):
@@ -118,8 +148,8 @@ class Sentience:
 
     @staticmethod
     def getDebugInfo():
-        return "Current Mood Positivity : %6.1f%%;\nMood Stability          : %6.1f%%;\nExposed Positivity      : %6.1f%%;" % \
-            (Sentience.getPrimaryMood()*100, Sentience.getMoodStability()*100, Sentience.getExposedPositivity()*100)
+        return "Current Mood Positivity : %6.1f%%;\nMood Stability          : %6.1f%%;\nExposed Positivity      : %6.1f%%%s;" % \
+            (Sentience.getPrimaryMood()*100, Sentience.getMoodStability()*100, Sentience.getExposedPositivity()*100, " (positivity overload)" if Sentience.isExposedPositivityOverloaded() else "")
 
     @staticmethod
     def getDebugInfoAfterMessage(message):

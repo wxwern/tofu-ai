@@ -1,10 +1,12 @@
 from nltk.tag import pos_tag
 from nltk.tokenize import word_tokenize
+from nltk.tokenize.casual import casual_tokenize
 
 from positivity import Sentience
 from queries import *
 
 import random
+import datetime
 
 IDENTITY = Sentience.getIdentity()
 
@@ -14,8 +16,8 @@ def get_message_combos():
         message_combos = [
                 (['ping'], ['pong'], 0.9),
                 (['pong'], ['ping'], 0.9),
-                (['hi', 'hello', 'helo', 'hallo', 'hola', 'hai', 'hoi'], ['hello!', 'hi!', 'こんにちは!'], 0.3),
-                ([':D', ':DD', ':DDD', ':)', ':))', ':)))', '(:', ':-)', ':>', ':>>'], [':)', ':D'], 0.3),
+                (['hi', 'hello', 'helo', 'hallo', 'hola', 'hai', 'hoi'], ['hello!', 'hi!', 'こんにちは!'], 0.2),
+                ([':D', ':DD', ':DDD', ':)', ':))', ':)))', '(:', ':-)', ':>', ':>>', ':>>>'], [':)', ':D'], 0.2),
         ]
 
         for words, responses, chance in message_combos:
@@ -40,7 +42,7 @@ def generate_response(s):
                 x2 += c
         return '`' + x2.replace(' :', ':').strip() + '`'
 
-    words = word_tokenize(s.lower())
+    words = casual_tokenize(s.lower(), reduce_len=True)
 
     tofu_tagged = is_tofu_tagged(s)
     tofu_targeted = tofu_tagged
@@ -58,10 +60,26 @@ def generate_response(s):
         return '`Yes/No Qn: %d; Sentence Structure: %s`' % (c, str(parsed_s))
 
     agreeability = Sentience.determineResponseAgreeability(s)
+    mood = Sentience.getPrimaryMood()
 
 
-    #if tofu_called_and_nothing_else(s):
-    #    pass #TODO: greet
+    if tofu_called_and_nothing_else(s):
+        #greeting likely
+        now = datetime.datetime.now()
+
+        if mood > 0.3:
+            if (6 <= now.hour <= 11) and 'morning' in words:
+                return random.choice(['good morning', 'morning', 'おはよう']) + ('!' if mood > 0.75 else ('.' if mood < 0.5 else ''))
+            if (19 <= now.hour <= 23 or now.hour <= 2) and 'night' in words:
+                return random.choice(['good night', 'gn', 'おやすみ']) + ('.' if mood < 0.5 else '')
+
+        if 'hello' in words or 'hi' in words:
+            if mood > 0.75:
+                return random.choice(['hello!', 'hi!', 'こんにちは!'])
+
+        if mood <= 0.3:
+            return random.choice(['bleh', 'o', 'meh', 'hmph'])
+
 
     if c > 0:
         if c == 1:

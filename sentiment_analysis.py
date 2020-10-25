@@ -4,6 +4,7 @@ from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.corpus import twitter_samples, stopwords
 from nltk.tag import pos_tag
 from nltk.tokenize import word_tokenize
+from nltk.tokenize.casual import casual_tokenize
 from nltk import FreqDist, classify, NaiveBayesClassifier
 import re, string, random
 import pickle
@@ -42,7 +43,7 @@ def getSentencePositivity(sentence):
         return None
 
     #prepare for classifier
-    tokenized = list(map(lambda x: 'I' if x == 'i' else x, word_tokenize(sentence)))
+    tokenized = list(map(lambda x: 'I' if x == 'i' else x, casual_tokenize(sentence)))
     custom_tokens = __remove_noise(tokenized)
 
     #classify and get probability

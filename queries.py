@@ -1,5 +1,6 @@
 from nltk.tag import pos_tag
 from nltk.tokenize import word_tokenize
+from nltk.tokenize.casual import casual_tokenize
 from positivity import Sentience
 
 IDENTITY = Sentience.getIdentity()
@@ -48,13 +49,13 @@ def yesno_qn_count(s):
 
 def tofu_called_and_nothing_else(s):
     tokens = parse_sentence(s)
-    count = 0
     found = False
-    while count < len(tokens) and tokens[count][1] in ('JJ', 'NN', 'NNS', 'NNP', 'NNPS'):
-        count += 1
-        if IDENTITY.lower() in tokens[0][0].lower():
+    for token in tokens:
+        if IDENTITY.lower() in token[0].lower():
             found = True
-    return found and len(tokens) == count
+        if token[1] not in ('JJ', 'NN', 'NNS', 'NNP', 'NNPS'):
+            return False
+    return found
 
 
 def asking_tofu_yesno_qn_count(s):
@@ -79,7 +80,7 @@ def parse_sentence(s):
     if isinstance(s, list):
         return s
     s = s.replace('@' + IDENTITY, IDENTITY)
-    tokens = list(map(lambda x: 'I' if x == 'i' else x, word_tokenize(s)))
+    tokens = list(map(lambda x: 'I' if x == 'i' else x, casual_tokenize(s,reduce_len=True)))
     tagged_tokens = pos_tag(tokens)
     return tagged_tokens
 

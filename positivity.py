@@ -93,7 +93,7 @@ class Sentience:
         """
         current_pos = Sentience.getExposedPositivity(unlimited=True)
         if not Sentience.__positivity_overload:
-            current_pos += x*0.25
+            current_pos += x*0.2
         else:
             current_pos += -abs(max(-0.05, min(x*0.25, 0.001)))
 

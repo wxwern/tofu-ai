@@ -14,10 +14,11 @@ __message_combos_cache = {}
 def get_message_combos():
     if not __message_combos_cache:
         message_combos = [
-                (['ping'], ['pong'], 0.9),
-                (['pong'], ['ping'], 0.9),
-                (['hi', 'hello', 'helo', 'hallo', 'hola', 'hai', 'hoi'], ['hello!', 'hi!', 'こんにちは!'], 0.2),
-                ([':D', ':DD', ':DDD', ':)', ':))', ':)))', '(:', ':-)', ':>', ':>>', ':>>>'], [':)', ':D'], 0.2),
+                (['ping'], ['pong', 'pong ping?', 'pong?', 'pong'], 0.9),
+                (['pong'], ['ping', 'ping pong' , 'pong?', 'ping'], 0.9),
+                (['hi', 'hello', 'helo', 'halo', 'hola', 'hai', 'hoi'], ['hello!', 'hi!', 'こんにちは!'], 0.2),
+                ([':D', ':)', '(:', ':-)', ':>'], [':)', ':D'], 0.2),
+                (['xd', 'lol', 'lmao', 'lmfao', 'haha'], ['lol', 'haha', 'ahaha', 'heh', 'lol', 'hm yes very funny', 'XD'], 0.15)
         ]
 
         for words, responses, chance in message_combos:
@@ -59,9 +60,8 @@ def generate_response(s):
     if D_STRUCTURE:
         return '`Yes/No Qn: %d; Sentence Structure: %s`' % (c, str(parsed_s))
 
-    agreeability = Sentience.determineResponseAgreeability(s)
     mood = Sentience.getPrimaryMood()
-
+    agreeability = Sentience.determineResponseAgreeability(s)
 
     if tofu_called_and_nothing_else(s):
         #greeting likely
@@ -155,13 +155,15 @@ def generate_response(s):
             "this sentence is too complicated for me to understand",
             "hmm",
         ])
-    elif not tofu_targeted and (IDENTITY.lower() in words or IDENTITY.lower() == s.lower()) and random.random() <= 0.1:
-        return random.choice(['hmm i heard my name', 'hmmmm', 'interesting', 'hm'])
-    elif len(words) <= 5:
-        combos = get_message_combos()
-        for word in words:
-            if word in combos:
-                if tofu_tagged or random.random() <= combos[word][1]:
-                    return random.choice(combos[word][0])
+    elif mood > 0.5 and Sentience.getExposedPositivity() > 0:
+        if not tofu_targeted and (IDENTITY.lower() in words or IDENTITY.lower() == s.lower()) and random.random() <= 0.1:
+            return random.choice(['hmm i heard my name', 'hmmmm', 'interesting', 'hm'])
+        elif len(words) <= 5:
+            combos = get_message_combos()
+            for word in words:
+                for w in [word, remove_repeated_chars_word(word)]:
+                    if w in combos:
+                        if tofu_tagged or random.random() <= combos[w][1]:
+                            return random.choice(combos[w][0])
 
     return None

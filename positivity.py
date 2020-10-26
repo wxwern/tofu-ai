@@ -93,12 +93,12 @@ class Sentience:
         """
         current_pos = Sentience.getExposedPositivity(unlimited=True)
         if not Sentience.__positivity_overload:
-            current_pos += x*0.2
+            current_pos += x*(0.3*max((1-abs(current_pos))**2, 0.1))
         else:
-            current_pos += -abs(max(-0.05, min(x*0.25, 0.001)))
+            current_pos += -abs(max(-0.05, min(x*0.3, 0.001)))
 
         Sentience.__exposed_positivity = current_pos
-        if Sentience.__exposed_positivity > 0.8 + Sentience.getMoodStability():
+        if Sentience.__exposed_positivity > 0.5 + Sentience.getMoodStability():
             Sentience.__positivity_overload = True
 
     @staticmethod

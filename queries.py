@@ -76,6 +76,14 @@ def asking_tofu_yesno_qn_count(s):
 def is_tofu_tagged(s):
     return ('@' + IDENTITY.lower()) in s.lower()
 
+def remove_repeated_chars_word(w):
+    x = ''
+    for c in w:
+        if x == '' or c != x[-1]:
+            x += c
+    return x
+
+
 def parse_sentence(s):
     if isinstance(s, list):
         return s

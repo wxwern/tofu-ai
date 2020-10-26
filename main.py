@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from engine import *
+from positivity import Sentience
 from bulkprocessing import *
 from sys import argv
 import time
@@ -62,9 +63,10 @@ if __name__ == "__main__":
                 c = asking_tofu_yesno_qn_count(s)
                 if c == -1:
                     c = yesno_qn_count(s)
-                print("parsed: %s" % str(parse_sentence(s)))
-                print("detected yes-no qns: %d" % c)
-                print("response: %s\n" % generate_response(s))
+                print("%s" % str(Sentience.getDebugInfoAfterMessage(s)))
+                print("Parsed                  : %s;" % str(parse_sentence(s)))
+                print("Detected yes-no qns     : %d;" % c)
+                print("Response                : %s;\n" % generate_response(s))
                 if len(argv) > 2:
                     break
         except KeyboardInterrupt:

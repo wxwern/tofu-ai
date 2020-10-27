@@ -2,6 +2,7 @@
 
 An NLTK powered script to allow for random automated responses to certain categories of messages.
 
+
 It can automatically determine whether a message matches a supported category, and if so craft a response.
 ```bash
 $ ./main.py reply "hmm i'm bored"
@@ -26,6 +27,8 @@ Useful for just-for-fun chatbots and the like.
 
 It identifies itself as 'tofu', and will attempt to also respond to messages that addresses 'tofu' as the subject. [WIP]
 
+Want to know more details on its behaviour? See the [Behaviour Wiki](behaviour_wiki.md).
+
 Currently supported:
 - Yes/No inquiries, e.g. "Should I go do my work instead of procastinating?"
 - Selecting an option from a pair of options, e.g. "Should I sleep or study?"
@@ -33,7 +36,6 @@ Currently supported:
 - It has its own mood at any point in time and can have mood swings.
 - Can be affected by positivity/negativity of exposed messages.
 - Random, e.g. "nice", ":)"
-
 
 ## Pre-requisites:
 Install dependencies via pip:

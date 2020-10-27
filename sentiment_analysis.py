@@ -94,14 +94,10 @@ if __name__ == "__main__":
 
 
     if __classifier is not None:
-        print('train __classifier [t] or use previous [p]?')
+        print('train classifier [t] or use previous [p]?')
 
     if __classifier is None or (str(input()) + ' ').lower()[0] == 't':
-        positive_tweets = twitter_samples.strings('positive_tweets.json')
-        negative_tweets = twitter_samples.strings('negative_tweets.json')
-        text = twitter_samples.strings('tweets.20150430-223406.json')
-        tweet_tokens = twitter_samples.tokenized('positive_tweets.json')[0]
-
+        print('preprocessing data...')
 
         positive_tweet_tokens = twitter_samples.tokenized('positive_tweets.json')
         negative_tweet_tokens = twitter_samples.tokenized('negative_tweets.json')
@@ -131,11 +127,17 @@ if __name__ == "__main__":
 
         dataset = positive_dataset + negative_dataset
 
+        print('dataset size: %d' % len(dataset))
+        print('splitting dataset...')
+
         random.shuffle(dataset)
 
-        train_data = dataset[:7000]
-        test_data = dataset[7000:]
+        data_len = len(dataset)
 
+        train_data = dataset[:int(data_len*0.6)]
+        test_data = dataset[int(data_len*0.6):]
+
+        print('training classifier...')
         __classifier = NaiveBayesClassifier.train(train_data)
         print("Accuracy is:", classify.accuracy(__classifier, test_data))
 

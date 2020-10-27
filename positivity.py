@@ -101,6 +101,7 @@ class Sentience:
         if Sentience.__exposed_positivity > 0.5 + Sentience.getMoodStability():
             Sentience.__positivity_overload = True
 
+    __DEF_PROB_THRESHOLD = 0.02
     @staticmethod
     def determineMessagePositivity(message):
         """
@@ -116,12 +117,15 @@ class Sentience:
         if not message.strip():
             return 0.0
 
-        return getSentencePositivity(message)
+        res = getSentencePositivity(message)
+        if abs(res) <= abs(Sentience.__DEF_PROB_THRESHOLD) + 0.00001:
+            return 0
+        return res
 
     @staticmethod
     def preloadPositivityClassifier():
         """Preloads the classifier used to determine whether a sentence is positive or negative."""
-        getSentencePositivity("dummy text")
+        Sentience.__DEF_PROB_THRESHOLD = getSentencePositivity("!@#$%^&*")
 
     @staticmethod
     def determineResponseAgreeability(message_positivity=0.0):

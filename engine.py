@@ -37,7 +37,7 @@ def generate_response(s):
         s = ' '.join(s.split(' ')[1:]).strip()
 
     if D_SENTIENCE:
-        x = Sentience.getDebugInfoAfterMessage(s).replace('\n',' ')
+        x = Sentience.getDebugInfoAfterMessage(Understanding.parse_sentence_subject_predicate(s)).replace('\n',' ')
         x2 = ' '
         for c in x:
             if c != ' ' or x2[-1] != ' ':
@@ -45,11 +45,20 @@ def generate_response(s):
         return '`' + x2.replace(' :', ':').strip() + '`'
 
     if D_STRUCTURE:
-        return 'Sentence Structure: `%s`' % str(Understanding.parse_and_split_message(s))
+        sentences = Understanding.parse_and_split_message(s)
+        if len(sentences) > 1:
+            print('Sentence Structure: Multiple sentences. Provide each sentence separately for details.')
+        if len(sentences) == 0:
+            return 'Provide a sentence after the debug command to debug sentence structure.'
+
+        def human_readable_structure(x):
+            s, p = Understanding.parse_sentence_subject_predicate(x)
+            return 'subj: %s, pred: %s' % (s,p)
+
+        return 'Sentence Structure: `%s`' % str("; ".join(map(human_readable_structure, sentences[0])))
 
 
     words = casual_tokenize(s.lower(), reduce_len=True)
-
     parsed_result = Understanding.parse_queries(s, single_sentence_only=True)
 
     if D_QUERIES:
@@ -61,7 +70,10 @@ def generate_response(s):
     tofu_targeted = parsed_result["target_summoned"]
 
     mood = Sentience.getPrimaryMood()
-    agreeability = Sentience.determineResponseAgreeability(s)
+    agreeability = \
+        Sentience.determineResponseAgreeability(
+            Understanding.parse_sentence_subject_predicate(queries[0][0]) #TODO: handle multiple queries, parsed subject-predicate components can work well
+        ) if queries else 0
 
     if subject_call is not None and queries == []:
         #greeting likely

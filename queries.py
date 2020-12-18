@@ -6,17 +6,18 @@ from positivity import Sentience
 
 IDENTITY = Sentience.getIdentity()
 
-#common tag sets
-__NOUN_SET       = {'JJ', 'NN', 'NNS', 'NNP', 'NNPS'}
+#common loosely defined tag sets
+__NOUN_SET       = {'DT', 'JJ', 'NN', 'NNS', 'NNP', 'NNPS', 'PRP', 'PRP$'}
 __VERB_SET       = {'VB', 'VBP', 'VBZ', 'VBD'}
 __ADVERB_SET     = {'RB', 'RBR', 'RBS'}
+__ADJECTIVE_SET  = {'JJ', 'IN', 'MD'}
 __PARTICLE_SET   = set(['RP'])
+__DETERMINER_SET   = set(['DT'])
 __CONNECTOR_SET  = {'CC', 'LS', ','}
 __TERMINATE_SET  = set(['.'])
 __WH_QN_SET      = {'WP', 'WP$', 'WRB', 'WDT'}
-__THE_SET        = set(['THE'])
 
-__TAG_SET_TYPES = ['NOUN', 'VERB', 'ADVERB', 'PARTICLE', 'CONNECTOR', 'TERMINATE', 'WH-', 'THE']
+__TAG_SET_TYPES = ['NOUN', 'VERB', 'ADVERB', 'ADJECTIVE', 'PARTICLE', 'DETERMINER', 'CONNECTOR', 'TERMINATE', 'WH-']
 def get_tag_set_types():
     return __TAG_SET_TYPES
 
@@ -30,14 +31,21 @@ def tag_in_set(tag, st):
         'NOUN': __NOUN_SET,
         'VERB': __VERB_SET,
         'ADVERB': __ADVERB_SET,
+        'ADJECTIVE': __ADJECTIVE_SET,
         'PARTICLE': __PARTICLE_SET,
+        'DETERMINER': __DETERMINER_SET,
         'CONNECTOR': __CONNECTOR_SET,
         'TERMINATE': __TERMINATE_SET,
-        'WH-': __WH_QN_SET,
-        'THE': __THE_SET
+        'WH-': __WH_QN_SET
     }
 
-    return (tag in TAG_SET_MAP[st]) if (st in TAG_SET_MAP) else False
+    if isinstance(st, list):
+        for _st in st:
+            if tag_in_set(tag, _st):
+                return True
+        return False
+    res = (tag in TAG_SET_MAP[st]) if (st in TAG_SET_MAP) else False
+    return res
 
 #sentence structures to note ("sentence signatures")
 __YN_QN_SETLIST  = [
@@ -139,6 +147,33 @@ class Understanding:
             "subject_call": subject_call_tokens,
             "target_summoned": target_summoned
         }
+
+    @staticmethod
+    def parse_sentence_subject_predicate(s):
+        '''
+        Attempts to perform a quick simple split of the sentence into subject and predicate.
+        Assumes input to be a singular sentence.
+
+        Returns two lists of tagged tokens [(token, tag)].
+        Both partial lists are returned as a tuple format (subject, predicate).
+
+        Accuracy is not guaranteed, and may not work well for more ambiguous sentences.
+        Order of words are guaranteed to be preserved.
+        '''
+        toktags = Understanding.parse_sentence(s)
+        was_noun = False
+        predicate_idx = None
+
+        for i, toktag in enumerate(toktags):
+            tok, tag = toktag
+            if was_noun and tag_in_set(tag, ['VERB', 'ADVERB', 'ADJECTIVE']):
+                predicate_idx = i
+            was_noun = tag_in_set(tag, ['DETERMINER', 'NOUN']) or tag in ('VBG',)
+
+        if predicate_idx is None:
+            return ([], toktags[:])
+
+        return (toktags[:predicate_idx], toktags[predicate_idx:])
 
     @staticmethod
     def is_target_tagged(s):

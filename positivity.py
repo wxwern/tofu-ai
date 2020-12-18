@@ -4,6 +4,7 @@ import random
 import math
 
 from sentiment_analysis import getSentencePositivity
+from queries import Understanding
 
 class Sentience:
 
@@ -78,7 +79,7 @@ class Sentience:
         if Sentience.__exposed_positivity > -0.5:
             Sentience.__positivity_overload = False
 
-        return Sentience.__exposed_positivity if unlimited else max(-1.0, min(Sentience.__exposed_positivity, 1.0))
+        return Sentience.__exposed_positivity if unlimited else round(max(-1.0, min(Sentience.__exposed_positivity, 1.0)),6)
 
     @staticmethod
     def isExposedPositivityOverloaded():
@@ -117,31 +118,25 @@ class Sentience:
 
     @staticmethod
     def _determineMessagePositivityWrapper(message, overall=True):
-        if isinstance(message, tuple):
+        if not overall:
+            if not isinstance(message, tuple):
+                message = Understanding.parse_sentence_subject_predicate(message)
+
             subject, predicate = tuple(map(lambda x: ' '.join(map(lambda y: y[0], x)), message))
-            if overall:
-                message = (subject + ' ' + predicate).strip()
-            else:
-                res_subj = Sentience._cleanupPositivityValue(getSentencePositivity(subject))
-                res_pred = Sentience._cleanupPositivityValue(getSentencePositivity(predicate))
+            res_subj = Sentience._cleanupPositivityValue(getSentencePositivity(subject))
+            res_pred = Sentience._cleanupPositivityValue(getSentencePositivity(predicate))
 
-                if res_subj is None or res_pred is None:
-                    return None
+            if res_subj is None or res_pred is None:
+                return None
 
-                if res_subj > -0.15:
-                    #subject is neutral or positive, agree if predicate is positive
-                    return res_pred
+            if res_subj > -0.15:
+                #subject is neutral or positive, agree if predicate is positive
+                return res_pred
 
-                #subject is negative, agree if predicate is negative
-                return res_pred * -1
+            #subject is negative, agree if predicate is negative
+            return res_pred * -1
 
-        if not isinstance(message, str):
-            try:
-                return max(-1.0,min(float(message), 1.0))
-            except ValueError:
-                return 0
-
-        if not message.strip():
+        if not isinstance(message, str) or not message.strip():
             return 0.0
 
         res = getSentencePositivity(message)
@@ -157,9 +152,6 @@ class Sentience:
         The parameter accepts a message in a string format or a message tokenized
         and split into subject-predicate form with Understanding.
 
-        Messages that are tokenized and split into subject-predicate form are
-        usually more accurate.
-
         Output ranges between [-1.0, 1.0], with -1.0 being most negative and 1.0
         being most positive.
         """
@@ -174,9 +166,6 @@ class Sentience:
         The parameter accepts a message in a string format or a message tokenized
         and split into subject-predicate form with Understanding.
 
-        Messages that are tokenized and split into subject-predicate form are
-        usually more accurate.
-
         Unlike determineMessagePositivity, this checks whether the positivity of
         parts of the sentence itself agrees with each other. For example,
         "losing is sad" would be negative, but it is valid in the sense that
@@ -187,7 +176,6 @@ class Sentience:
         being most valid.
         """
         return Sentience._determineMessagePositivityWrapper(message, overall=False)
-
 
     @staticmethod
     def preloadPositivityClassifier():
@@ -227,9 +215,79 @@ class Sentience:
         return result
 
     @staticmethod
+    def decideResponseAgree(message):
+        """
+        Decides whether a response would agree with the message.
+        Returns True if agree, False if disagree, None if indecisive.
+        """
+        agreeability = Sentience.determineResponseAgreeability(message)
+        if agreeability > 0.3:
+            return True
+        if agreeability < -0.3:
+            return False
+
+        random.seed(time.time())
+        factor  = 1-(abs(agreeability))/0.3
+        rnd_tri = random.uniform(0.0, factor) + random.uniform(0.0, factor)
+        if rnd_tri > 0.7:
+            return None
+        if agreeability > 0.1:
+            return True
+        if agreeability < -0.1:
+            return False
+        return random.choice([True, False])
+
+    @staticmethod
+    def decideResponseOptionsIndex(subject, options):
+        """
+        Decides to choose an option from the given options for a specified subject.
+        Returns the index, which may be None if indecisive.
+        """
+        subj_pos = Sentience._cleanupPositivityValue(
+            getSentencePositivity(Understanding.unparse_sentence(subject))
+        )
+        if subj_pos is None:
+            return random.randint(0,len(options))
+        opts_pos = []
+        for i, option in enumerate(options):
+            opts_pos.append(
+                (
+                    i,
+                    Sentience._cleanupPositivityValue(
+                        getSentencePositivity(Understanding.unparse_sentence(option))
+                    )
+                )
+            )
+
+        random.seed(time.time())
+
+        deviation = random.uniform(-0.5,0.5) * (1-Sentience.getMoodStability())
+        if subj_pos > -0.15:
+            #subject is neutral or positive, look for positive answer
+            roll = random.uniform(-0.2 + deviation, 1.0)
+        else:
+            #subject is negative, look for negative response
+            roll = random.uniform(-1.0 , 0.2 + deviation)
+
+        if abs(roll) < (1-Sentience.getMoodStability())*0.5:
+            return None
+
+        opti, _ = min(map(lambda x: (x[0], abs(roll-x[1])), opts_pos), key=lambda x: x[1])
+        return opti
+
+    @staticmethod
     def getDebugInfo():
         return "Current Mood Positivity : %6.1f%%;\nMood Stability          : %6.1f%%;\nExposed Positivity      : %6.1f%%%s;" % \
             (Sentience.getPrimaryMood()*100, Sentience.getMoodStability()*100, Sentience.getExposedPositivity()*100, " (positivity overload)" if Sentience.isExposedPositivityOverloaded() else "")
+
+    @staticmethod
+    def getDebugInfoDict():
+        return {
+            "primaryMood"       : Sentience.getPrimaryMood(),
+            "moodStability"     : Sentience.getMoodStability(),
+            "exposedPositivity" : Sentience.getExposedPositivity(),
+            "positivityOverload": Sentience.isExposedPositivityOverloaded()
+        }
 
     @staticmethod
     def getDebugInfoAfterMessage(message):

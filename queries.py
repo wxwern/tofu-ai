@@ -1,10 +1,8 @@
 import copy
 from nltk.tag import pos_tag
-from nltk.tokenize import word_tokenize
 from nltk.tokenize.casual import casual_tokenize
-from positivity import Sentience
 
-IDENTITY = Sentience.getIdentity()
+IDENTITY = None
 
 #common loosely defined tag sets
 __NOUN_SET       = {'DT', 'JJ', 'NN', 'NNS', 'NNP', 'NNPS', 'PRP', 'PRP$'}
@@ -71,18 +69,20 @@ def simple_sentence_is_type(toktags, typ):
 
     setlist = SENTENCE_TYPE_MAP[typ]
 
+    c = 0
     for i, toktag in enumerate(toktags):
         if i >= len(setlist):
             break
         if toktag[1] not in setlist[i]:
             return False
-    return True
+        c += 1
+    return c == len(setlist)
 
 # ----------- #
 class Understanding:
     '''Breaks down messages into easy to digest portions'''
     @staticmethod
-    def parse_queries(s, single_sentence_only=False):
+    def parse_queries(s, single_sentence_only=False, merge_results=False):
         '''
         Returns all questions being asked in this given string and relevant information as a dictionary.
 
@@ -112,35 +112,55 @@ class Understanding:
                     s = Understanding.parse_queries(sentence)
                     if s is not None:
                         results.append(s)
-                return results
+
+                if not merge_results:
+                    return results
+
+                queries = []
+                for result in results:
+                    queries.extend(result["queries"])
+
+                merged_results = {
+                    "queries": queries,
+                    "subject_call": results[0]["subject_call"],
+                    "target_summoned": results[0]["target_summoned"]
+                }
+                return merged_results
 
 
         queries = []
 
+        first_portion_ynqn = False
         sentence_portions = sentences[0] if sentences else []
-        for portion in sentence_portions:
-            if len(portion) < 2:
-                continue
+        for i, portion in enumerate(sentence_portions):
 
-            _done = False
+            selected_query_type = None
             for query_type in get_query_types():
                 if simple_sentence_is_type(portion, query_type):
                     queries.append((portion, query_type))
-                    _done = True
+                    selected_query_type = query_type
                     break
 
-            if not _done:
+            if not selected_query_type and len(portion) >= 2:
                 for query_type in get_query_types():
                     if portion[1][1] == 'VB':
                         #in some cases the detection is incorrectly a verb.
                         #so we might want to see if it can be interpreted as a noun or other valid term.
                         portion_alt = copy.deepcopy((portion))
-                        portion_alt[1][1] = Understanding.parse_sentence(portion_alt[1][0])[0][1]
+                        portion_alt[1] = (portion_alt[1][0], Understanding.parse_sentence(portion_alt[1][0])[0][1])
 
                         if simple_sentence_is_type(portion_alt, query_type):
                             queries.append((portion_alt, query_type))
-                            _done = True
+                            selected_query_type = query_type
                             break
+
+            # heuristics for yn question parsing
+            # the ideal way would be to do more parsing
+            # but i am lazy
+            if i == 0 and selected_query_type == 'YN_QN':
+                first_portion_ynqn = True
+            if i > 0 and first_portion_ynqn and not selected_query_type:
+                queries.append((portion, 'YN_QN'))
 
         return {
             "queries": queries,
@@ -160,6 +180,9 @@ class Understanding:
         Accuracy is not guaranteed, and may not work well for more ambiguous sentences.
         Order of words are guaranteed to be preserved.
         '''
+        if isinstance(s, tuple):
+            return s
+
         toktags = Understanding.parse_sentence(s)
         was_noun = False
         predicate_idx = None
@@ -177,11 +200,20 @@ class Understanding:
 
     @staticmethod
     def is_target_tagged(s):
+        global IDENTITY
+        if IDENTITY is None:
+            import positivity
+            IDENTITY = positivity.Sentience.getIdentity()
+
         return ('@' + IDENTITY.lower()) in s.lower()
 
     @staticmethod
     def matches_target(t):
         '''Returns True if given token matches identity'''
+        global IDENTITY
+        if IDENTITY is None:
+            import positivity
+            IDENTITY = positivity.Sentience.getIdentity()
         return IDENTITY.lower() in t.lower() and len(t) - len(IDENTITY) <= 2
 
     @staticmethod
@@ -195,21 +227,41 @@ class Understanding:
     @staticmethod
     def parse_sentence(s):
         '''
-        Returns a (token, tag) list of the sentence.
+        Returns the tagged and tokenized sentence in the form of a (token, tag) list.
 
         If a (token, tag) list is given, it returns itself. This allows for redundant calls to make sure the sentence is tokenized.
         '''
         if isinstance(s, list):
             return s
+
+        global IDENTITY
+        if IDENTITY is None:
+            import positivity
+            IDENTITY = positivity.Sentience.getIdentity()
+
         s = s.replace('@' + IDENTITY, IDENTITY)
         tokens = list(map(lambda x: 'I' if x == 'i' else x, casual_tokenize(s,reduce_len=True)))
         tagged_tokens = list(map(lambda x: (x[0], 'NN') if Understanding.matches_target(x[0]) else x, pos_tag(tokens)))
         return tagged_tokens
 
     @staticmethod
+    def unparse_sentence(tt):
+        '''
+        Reconstructs the sentence from tagged tokens in the form of a (token, tag) list,
+        then returns a string.
+
+        Note: This cannot 100% reproduce the original sentence, and may have spacing errors.
+
+        If a string is given, it returns itself. This allows for redundant calls to make sure the sentence is untokenized.
+        '''
+        if isinstance(tt, str):
+            return tt
+        return ' '.join(map(lambda x: x[0], tt)).strip()
+
+    @staticmethod
     def parse_and_split_message(s):
         '''
-        Returns parsed data split into sentences and sentence parts. This will return a 3D list of (tok, tag).
+        Returns parsed data split into sentences and sentence parts. This will return a 3D list of (token, tag).
         '''
         tokens = Understanding.parse_sentence(s)
         sentences = [[]]
@@ -267,6 +319,8 @@ class Understanding:
             if tag_in_set(tag, 'CONNECTOR'):
                 index_after_target += 1
                 continue
+            if i != index_after_target:
+                break
 
         return (tokens[:index_after_target] if index_after_target > 0 else None, tokens[index_after_target:], target_summoned)
 

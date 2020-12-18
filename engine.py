@@ -1,17 +1,17 @@
-from nltk.tag import pos_tag
-from nltk.tokenize import word_tokenize
+import random
+import datetime
+
 from nltk.tokenize.casual import casual_tokenize
 
 from positivity import Sentience
 from queries import Understanding
 
-import random
-import datetime
 
 IDENTITY = Sentience.getIdentity()
 
 __message_combos_cache = {}
 def get_message_combos():
+    global __message_combos_cache
     if not __message_combos_cache:
         message_combos = [
                 (['ping'], ['pong', 'pong ping?', 'pong?', 'pong'], 0.9),
@@ -27,10 +27,10 @@ def get_message_combos():
 
     return __message_combos_cache
 
-def generate_response(s):
-
+def process_debug_output(s):
     D_STRUCTURE = s.startswith("!DEBUG_STRUCTURE")
     D_SENTIENCE = s.startswith("!DEBUG_SENTIENCE")
+    D_QUERIES_VB = s.startswith("!DEBUG_QUERIES_VB")
     D_QUERIES = s.startswith("!DEBUG_QUERIES")
 
     if s.startswith("!DEBUG"):
@@ -57,24 +57,45 @@ def generate_response(s):
 
         return 'Sentence Structure: `%s`' % str("; ".join(map(human_readable_structure, sentences[0])))
 
-
-    words = casual_tokenize(s.lower(), reduce_len=True)
-    parsed_result = Understanding.parse_queries(s, single_sentence_only=True)
+    if D_QUERIES_VB:
+        return 'Sentence Queries: `%s`' % str(Understanding.parse_queries(s, merge_results=True))
 
     if D_QUERIES:
-        return 'Sentence Queries: `%s`' % str(parsed_result)
+        res = Understanding.parse_queries(s, merge_results=True)
+        res["queries"] = list(map(lambda x: (Understanding.unparse_sentence(x[0]), x[1]), res["queries"]))
+        if res["subject_call"] is not None:
+            res["subject_call"] = Understanding.unparse_sentence(res["subject_call"])
+        return 'Sentence Queries: `%s`' % str(res)
+
+    return None
+
+
+def generate_response(s, limit_autoanswer=False):
+
+    debug_out = process_debug_output(s)
+    if debug_out:
+        return debug_out
+
+    #
+    # SENTENCE PARSING
+    #
+
+    words = casual_tokenize(s.lower(), reduce_len=True)
+    parsed_result = Understanding.parse_queries(s, merge_results=True)
 
     subject_call = parsed_result["subject_call"]
     queries = parsed_result["queries"]
     tofu_tagged = Understanding.is_target_tagged(s)
     tofu_targeted = parsed_result["target_summoned"]
 
-    mood = Sentience.getPrimaryMood()
-    agreeability = \
-        Sentience.determineResponseAgreeability(
-            Understanding.parse_sentence_subject_predicate(queries[0][0]) #TODO: handle multiple queries, parsed subject-predicate components can work well
-        ) if queries else 0
+    query_types = set(map(lambda x: x[1], queries))
+    too_complicated = len(query_types) > 1 or len(queries) > 4
 
+    mood = Sentience.getPrimaryMood()
+
+    #
+    # Greetings
+    #
     if subject_call is not None and queries == []:
         #greeting likely
         now = datetime.datetime.now()
@@ -92,9 +113,37 @@ def generate_response(s):
         if mood <= 0.3:
             return random.choice(['bleh', 'o', 'meh', 'hmph'])
 
-    c = len(list(filter(lambda x: x[1] == 'YN_QN', queries)))
-    if c > 0:
-        if c == 1:
+    #
+    # Query answering
+    #
+
+    if too_complicated:
+        if tofu_targeted:
+            return random.choice([
+                "i'm confused",
+                "interesting question",
+                "uh.. i am confused",
+                "i don't understand what you mean",
+                "this sentence is too complicated for me to understand",
+                "this question is too confusing for me"
+                "hmm",
+            ])
+        return None
+
+    if 'STD_QN' in query_types and tofu_targeted:
+        return random.choice([
+            "sorry, this question is not within my capabilities to answer",
+            "i can't answer that yet oops",
+            "sorry, the question is too open-ended for me",
+            "i don't know how to answer that, am weak in FRQs sry",
+            "i'm not smart enough to know how to answer that",
+            "that sounds like an interesting question",
+            "hmm",
+        ])
+
+    if 'YN_QN' in query_types and (not limit_autoanswer or tofu_targeted):
+        filtered_queries = list(filter(lambda x: x[1] == 'YN_QN', queries))
+        if len(filtered_queries) == 1:
             yes_opt = random.choice([
                 "perhaps",
                 "i believe yes",
@@ -106,7 +155,7 @@ def generate_response(s):
                 "very likely",
                 "most definitely",
                 "yes indeed",
-                "i'd say yes",
+                "i'd say yes"
             ])
             no_opt = random.choice([
                 "maybe not",
@@ -118,7 +167,7 @@ def generate_response(s):
                 "probably not",
                 "most definitely not",
                 "i think no",
-                "not at all",
+                "not at all"
             ])
             rnd_opt = random.choice([
                 "i'm not sure about that",
@@ -127,54 +176,74 @@ def generate_response(s):
                 "i don't wanna tell you right now",
                 "i don't have a clue",
                 "hmmm",
-                "my sources cannot be trusted",
+                "my sources cannot be trusted"
             ])
 
-            if agreeability > 0.3:
-                return yes_opt
-            elif agreeability < -0.3:
-                return no_opt
-            else:
-                factor = 1-(abs(agreeability))/0.3
-                rnd_tri= random.uniform(0.0, factor)
-                if rnd_tri > 0.5:
-                    return rnd_opt
-                elif agreeability > 0.15:
-                    return yes_opt
-                elif agreeability < -0.15:
-                    return no_opt
-                else:
-                    return random.choice([yes_opt, no_opt])
+            chosen = Sentience.decideResponseAgree(filtered_queries[0][0])
+            if chosen is None:
+                return rnd_opt
+            return yes_opt if chosen else no_opt
 
-        if c == 2:
-            return random.choice([
+        if len(filtered_queries) == 2:
+            opt_1 = random.choice([
                 "first option",
-                "the latter",
-                "the former",
+                "go with the first",
+                "the former"
+            ])
+            opt_2 = random.choice([
+                "second option",
                 "on second thought, your second option",
+                "the latter"
+            ])
+            opt_nil = random.choice([
                 "why not both",
                 "i can't find the answer to that",
                 "i think neither",
-                "go with the first",
-                "second option",
-                "can't decide, so i'll say yes",
+                "can't decide, so i'll say yes"
             ])
-        return random.choice([
-            "i'm confused",
-            "interesting question",
-            "i don't understand what you mean",
-            "this sentence is too complicated for me to understand",
-            "hmm",
-        ])
-    elif mood > 0.5 and Sentience.getExposedPositivity() > 0:
+            subj, pred1 = Understanding.parse_sentence_subject_predicate(filtered_queries[0][0])
+            _   , pred2 = Understanding.parse_sentence_subject_predicate(filtered_queries[1][0])
+            chosen = Sentience.decideResponseOptionsIndex(subj, [pred1, pred2])
+            if chosen == 0:
+                return opt_1
+            if chosen == 1:
+                return opt_2
+            return opt_nil
+
+        if len(filtered_queries) > 2 and tofu_targeted:
+            subject = None
+            options = []
+            for query, _ in filtered_queries:
+                res = Understanding.parse_sentence_subject_predicate(query)
+                if subject is None:
+                    subject = res[0]
+                options.append(res[1])
+            chosen = Sentience.decideResponseOptionsIndex(subject, options)
+            if chosen is None:
+                return random.choice([
+                    "i can't decide",
+                    "am a little confused here",
+                    "not sure which one"
+                ])
+            return random.choice([
+                "option %d it is",
+                "i'll pick option %d",
+                "i think option %d",
+                "option %d"
+            ]) % (chosen+1)
+
+
+    #
+    # Misc responses
+    #
+    if mood > 0.5 and Sentience.getExposedPositivity() >= 0:
         if not tofu_targeted and (IDENTITY.lower() in words or IDENTITY.lower() == s.lower()) and random.random() <= 0.1:
             return random.choice(['hmm i heard my name', 'hmmmm', 'interesting', 'hm'])
-        elif len(words) <= 5:
+        if len(words) <= 5:
             combos = get_message_combos()
             for word in words:
                 for w in [word, Understanding.remove_repeated_chars_word(word)]:
-                    if w in combos:
-                        if tofu_tagged or random.random() <= combos[w][1]:
-                            return random.choice(combos[w][0])
+                    if w in combos and (tofu_tagged or random.random() <= combos[w][1]):
+                        return random.choice(combos[w][0])
 
     return None

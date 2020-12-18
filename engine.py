@@ -3,7 +3,7 @@ from nltk.tokenize import word_tokenize
 from nltk.tokenize.casual import casual_tokenize
 
 from positivity import Sentience
-from queries import *
+from queries import Understanding
 
 import random
 import datetime
@@ -31,9 +31,10 @@ def generate_response(s):
 
     D_STRUCTURE = s.startswith("!DEBUG_STRUCTURE")
     D_SENTIENCE = s.startswith("!DEBUG_SENTIENCE")
+    D_QUERIES = s.startswith("!DEBUG_QUERIES")
 
     if s.startswith("!DEBUG"):
-        s = s[16:].strip()
+        s = ' '.join(s.split(' ')[1:]).strip()
 
     if D_SENTIENCE:
         x = Sentience.getDebugInfoAfterMessage(s).replace('\n',' ')
@@ -43,27 +44,26 @@ def generate_response(s):
                 x2 += c
         return '`' + x2.replace(' :', ':').strip() + '`'
 
+    if D_STRUCTURE:
+        return 'Sentence Structure: `%s`' % str(Understanding.parse_and_split_message(s))
+
+
     words = casual_tokenize(s.lower(), reduce_len=True)
 
-    tofu_tagged = is_tofu_tagged(s)
-    tofu_targeted = tofu_tagged
+    parsed_result = Understanding.parse_queries(s, single_sentence_only=True)
 
-    #asking_question = is_question(s)
-    parsed_s = parse_sentence(s)
+    if D_QUERIES:
+        return 'Sentence Queries: `%s`' % str(parsed_result)
 
-    c = asking_tofu_yesno_qn_count(parsed_s)
-    if c == -1:
-        c = yesno_qn_count(parsed_s)
-    else:
-        tofu_targeted = True
-
-    if D_STRUCTURE:
-        return '`Yes/No Qn: %d; Sentence Structure: %s`' % (c, str(parsed_s))
+    subject_call = parsed_result["subject_call"]
+    queries = parsed_result["queries"]
+    tofu_tagged = Understanding.is_target_tagged(s)
+    tofu_targeted = parsed_result["target_summoned"]
 
     mood = Sentience.getPrimaryMood()
     agreeability = Sentience.determineResponseAgreeability(s)
 
-    if tofu_called_and_nothing_else(s):
+    if subject_call is not None and queries == []:
         #greeting likely
         now = datetime.datetime.now()
 
@@ -80,10 +80,9 @@ def generate_response(s):
         if mood <= 0.3:
             return random.choice(['bleh', 'o', 'meh', 'hmph'])
 
-
+    c = len(list(filter(lambda x: x[1] == 'YN_QN', queries)))
     if c > 0:
         if c == 1:
-
             yes_opt = random.choice([
                 "perhaps",
                 "i believe yes",
@@ -161,7 +160,7 @@ def generate_response(s):
         elif len(words) <= 5:
             combos = get_message_combos()
             for word in words:
-                for w in [word, remove_repeated_chars_word(word)]:
+                for w in [word, Understanding.remove_repeated_chars_word(word)]:
                     if w in combos:
                         if tofu_tagged or random.random() <= combos[w][1]:
                             return random.choice(combos[w][0])

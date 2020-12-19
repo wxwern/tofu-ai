@@ -52,6 +52,8 @@ class Sentience:
         random.seed(time.time())
         return ans
 
+
+
     __exposed_positivity = 0.0
     __last_message_exposure = 0.0
     __positivity_overload = False
@@ -289,6 +291,105 @@ class Sentience:
         opti, _ = min(map(lambda x: (x[0], abs(roll-x[1])), opts_pos), key=lambda x: x[1])
         return opti
 
+
+
+    @staticmethod
+    def getStatusMessage():
+        """Returns a status message as of right now, based on current conditions."""
+
+        now = datetime.datetime.now()
+        hour = now.hour
+        mood = Sentience.getPrimaryMood()
+        exp_mood = Sentience.getExposedPositivity()
+
+        random.seed((time.time()//86400*86400))
+
+        #sleeping
+        if not (8 <= hour < 22) and mood <= 0.5:
+            if exp_mood < -0.1:
+                return random.choice([
+                    "bleh",
+                    "not sleeping well",
+                    "why's chat so noisy",
+                    "can't sleep",
+                    "do not disturb pls thx",
+                ])
+
+            if mood < 0:
+                return random.choice([
+                    "crying myself to sleep rn",
+                    ":(",
+                    "had a nightmare",
+                    "can't sleep",
+                    "._."
+                ])
+
+            return random.choice([
+                "zzz...",
+                "sweet dreams",
+                "good night",
+                "sleeping...",
+                "having some rest"
+            ])
+
+        if Sentience.isExposedPositivityOverloaded():
+            return random.choice([
+                "i'm done",
+                "that's too much"
+                "goodbye",
+                "tired",
+                "need rest",
+            ])
+
+        #happy
+        if mood >= 0.7:
+            return random.choice([
+                ":D",
+                "great day today",
+                "happy happy",
+                "hehe",
+                "good times",
+                "yay",
+                "what's up",
+                "happiness",
+                "it's a nice day",
+            ])
+        #moody-ish
+        if mood >= 0.4:
+            return random.choice([
+                "hmm",
+                "yeet",
+                "bleh",
+                "not happy",
+                "moody rn",
+                "nothing"
+            ])
+        #more moody
+        if mood >= -0.3:
+            return random.choice([
+                "moody rn",
+                "not happy",
+                "i'm fine.",
+                "bleh",
+                "._.",
+                ":(",
+            ])
+        #very unhappy
+        return random.choice([
+            "sad",
+            "cries",
+            "roar",
+            ":_(",
+            ">:(",
+            "mad",
+            "angry",
+            "I'M FINE.",
+            "bleh",
+            "no",
+        ])
+
+
+
     @staticmethod
     def getDebugInfo():
         return "Current Mood Positivity : %6.1f%%;\nMood Stability          : %6.1f%%;\nExposed Positivity      : %6.1f%%%s;" % \
@@ -297,6 +398,7 @@ class Sentience:
     @staticmethod
     def getDebugInfoDict():
         return {
+            "statusMessage"     : Sentience.getStatusMessage(),
             "primaryMood"       : Sentience.getPrimaryMood(),
             "moodStability"     : Sentience.getMoodStability(),
             "exposedPositivity" : Sentience.getExposedPositivity(),

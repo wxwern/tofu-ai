@@ -91,19 +91,19 @@ maybe
 ```bash
 $ ./main.py jsonio #starts a jsonio interface where all inputs and outputs are in json format
 {"type": "status"}
-{"primaryMood": 0.8611740675984976, "moodStability": 0.5333479168955446, "exposedPositivity": 0.0, "positivityOverload": false}
+{"statusMessage": "yay", "primaryMood": 0.8611740675984976, "moodStability": 0.5333479168955446, "exposedPositivity": 0.0, "positivityOverload": false}
 {"type": "message", "contents": "hello tofu!"}
-{"response": "hello!", "primaryMood": 0.8618000236179784, "moodStability": 0.5333479168955446, "exposedPositivity": 0.167442, "positivityOverload": false}
+{"response": "hello!", "statusMessage": "yay", "primaryMood": 0.8618000236179784, "moodStability": 0.5333479168955446, "exposedPositivity": 0.167442, "positivityOverload": false}
 {"type": "message", "contents": "are you happy today?"}
-{"response": "yes indeed", "primaryMood": 0.8657104146664363, "moodStability": 0.5333479168955446, "exposedPositivity": 0.32403, "positivityOverload": false}
+{"response": "yes indeed", "statusMessage": "yay", "primaryMood": 0.8657104146664363, "moodStability": 0.5333479168955446, "exposedPositivity": 0.32403, "positivityOverload": false}
 {"type": "message", "contents": "good to know :D"}
-{"response": null, "primaryMood": 0.8734032228190116, "moodStability": 0.5333479168955446, "exposedPositivity": 0.45097, "positivityOverload": false}
+{"response": null, "statusMessage": "yay", "primaryMood": 0.8734032228190116, "moodStability": 0.5333479168955446, "exposedPositivity": 0.45097, "positivityOverload": false}
 dummy broken data
 {"error": "malformed data", "response": null}
 ```
 
 Accepts json input in the format:
-```json
+```ts
 {
     "type"     : "status" | "private message" | "silent group message" | "group message" | "message",
     "contents"?: string
@@ -111,21 +111,22 @@ Accepts json input in the format:
 ```
 
 Returns a json output in the format:
-```json
+```ts
 {
+    "statusMessage"      : string,
     "primaryMood"        : number,
     "moodStability"      : number,
     "exposedPositivity"  : number,
-    "positivityOverload" : bool,
+    "positivityOverload" : boolean,
     "response"           : string | null
 }
 ```
 
 or, if an error occurs:
-```json
+```ts
 {
-    "error"              : string,
-    "response"           : string | null
+    "error"    : string,
+    "response" : string | null
 }
 ```
 

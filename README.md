@@ -60,7 +60,7 @@ nltk.download('twitter_samples')
 
 Note that the script takes some time to initialise. If you use any options without a second argument, the command line interface can be used. In this case, all responses are instantaneous after the initialisation.
 
-- Replies (2nd argument)
+### Replies (message passed as argument)
 ```bash
 $ ./main.py reply "should i go for a walk"
 perhaps
@@ -68,12 +68,13 @@ $ ./main.py reply "may i answer the call"
 my sources say no
 $ ./main.py reply "hi tofu will i be lucky today"
 most definitely
-$ ./main.py reply "i have been bamboozled" # does not provide a response as it is not within a supported message category
+$ ./main.py reply "i have been bamboozled"
+hmm
 $ ./main.py reply "hey tofu should i watch a movie or read a book"
 the latter
 $
 ```
-- Direct Chat (stdin/stdout)
+### Direct Chat (stdin/stdout)
 
 ```bash
 $ ./main.py chat # starts a 'chat' interface where the user uses cli input and the responses would be the cli output
@@ -84,8 +85,9 @@ hmm very nice
 will this take off
 maybe
 ```
+One line of standard input always corresponds to one line of standard output.
 
-- JSON (stdin/stdout)
+### JSON (stdin/stdout)
 
 ```bash
 $ ./main.py jsonio #starts a jsonio interface where all inputs and outputs are in json format
@@ -129,9 +131,9 @@ or, if an error occurs:
 }
 ```
 
-\* When using `chat` or `jsonio`, one line of standard input always corresponds to one line of standard output.
+One line of standard input always corresponds to one line of standard output.
 
-- Process chat history (format: `[<datetime>] <user>: <message>`)
+### Process chat history (format: `[<datetime>] <user>: <message>`)
 ```bash
 $ ./main.py emulate message_history.txt
 - john:
@@ -142,7 +144,7 @@ nah
 
 ```
 
-- Retrain Sentiment Analysis Model:
+### Retrain Sentiment Analysis Model:
 ```bash
 $ python3 sentiment_analysis.py
 ```

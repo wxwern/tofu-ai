@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from engine import *
+from engine import Responder
 from positivity import Sentience
 from bulkprocessing import *
 from sys import argv
@@ -22,27 +22,39 @@ if __name__ == "__main__":
             print(message[1], end=':\n')
             print(message[2])
             print()
-            x = generate_response(message[2])
+            x = Responder.generate_response(message[2])
             if x is not None:
                 time.sleep(1)
                 print('* BOT tofu2 (emulated autoreply):\n' + x)
                 print()
-
-    elif 'countyn' == argv[1] and len(argv) >= 3:
-        print(yesno_qn_count(argv[2]))
-
-    elif 'reply' == argv[1] and len(argv) >= 3:
-        reply = generate_response(argv[2])
+    elif argv[1] == 'reply' and len(argv) >= 3:
+        reply = Responder.generate_response(argv[2])
         if reply is not None:
             print(reply)
-    elif 'chat' == argv[1]:
+    elif argv[1] == 'chat':
         try:
             while True:
                 if len(argv) > 2:
                     s = argv[2]
                 else:
                     s = input()
-                reply = generate_response(s)
+                reply = Responder.generate_response(s)
+                if reply is not None:
+                    print(reply)
+                else:
+                    print()
+                if len(argv) > 2:
+                    break
+        except KeyboardInterrupt:
+            pass
+    elif argv[1] == 'jsonio':
+        try:
+            while True:
+                if len(argv) > 2:
+                    s = argv[2]
+                else:
+                    s = input()
+                reply = Responder.get_info(s)
                 if reply is not None:
                     print(reply)
                 else:
@@ -52,24 +64,5 @@ if __name__ == "__main__":
         except KeyboardInterrupt:
             pass
 
-    elif 'debug' == argv[1]:
-        try:
-            while True:
-                if len(argv) > 2:
-                    s = argv[2]
-                else:
-                    print("type input:")
-                    s = input()
-                c = asking_tofu_yesno_qn_count(s)
-                if c == -1:
-                    c = yesno_qn_count(s)
-                print("%s" % str(Sentience.getDebugInfoAfterMessage(s)))
-                print("Parsed                  : %s;" % str(parse_sentence(s)))
-                print("Detected yes-no qns     : %d;" % c)
-                print("Response                : %s;\n" % generate_response(s))
-                if len(argv) > 2:
-                    break
-        except KeyboardInterrupt:
-            pass
     else:
         print("Invalid arguments.")

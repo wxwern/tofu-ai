@@ -107,6 +107,18 @@ class Sentience:
         if Sentience.__exposed_positivity > 0.5 + Sentience.getMoodStability():
             Sentience.__positivity_overload = True
 
+    @staticmethod
+    def exposeToMessage(message):
+        """
+        Exposes to the given message and updates the exposed positivity value.
+        """
+        x = Sentience.determineMessagePositivity(message)
+        if x is None:
+            random.seed(time.time())
+            x = random.uniform(-1.0,1.0)
+        Sentience._addExposedPositivity(x)
+
+
     __DEF_PROB_THRESHOLD = 0.02
     @staticmethod
     def _cleanupPositivityValue(v):
@@ -183,12 +195,12 @@ class Sentience:
         Sentience.__DEF_PROB_THRESHOLD = getSentencePositivity("!@#$%^&*")
 
     @staticmethod
-    def determineResponseAgreeability(message):
+    def determineResponseAgreeability(message, updateExposedPositivity=False):
         """
         Returns how much to 'agree' with a message received with the given message.
         The parameter accepts a message in a string format or tokenized and split into subject-predicate form with Understanding.
 
-        Also updates exposed positivity.
+        Also updates exposed positivity if updateExposedPositivity is set to True.
 
         Output ranges are between [-1.0, 1.0]
         """
@@ -200,7 +212,8 @@ class Sentience:
             message_validity = random.uniform(-1.0,1.0)
             message_positivity = message_validity
 
-        Sentience._addExposedPositivity(message_positivity)
+        if updateExposedPositivity:
+            Sentience._addExposedPositivity(message_positivity)
 
         #compute random deviation from current time
         random.seed(time.time())
@@ -260,8 +273,9 @@ class Sentience:
             )
 
         random.seed(time.time())
-
+        random.shuffle(opts_pos)
         deviation = random.uniform(-0.5,0.5) * (1-Sentience.getMoodStability())
+
         if subj_pos > -0.15:
             #subject is neutral or positive, look for positive answer
             roll = random.uniform(-0.2 + deviation, 1.0)
@@ -269,7 +283,7 @@ class Sentience:
             #subject is negative, look for negative response
             roll = random.uniform(-1.0 , 0.2 + deviation)
 
-        if abs(roll) < (1-Sentience.getMoodStability())*0.5:
+        if abs(roll) < (1-Sentience.getMoodStability())*0.3:
             return None
 
         opti, _ = min(map(lambda x: (x[0], abs(roll-x[1])), opts_pos), key=lambda x: x[1])

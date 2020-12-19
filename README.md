@@ -61,7 +61,7 @@ nltk.download('twitter_samples')
 
 Note that the script takes some time to initialise. If you use any options without a second argument, the command line interface can be used. In this case, all responses are instantaneous after the initialisation.
 
-Replies:
+- Replies (2nd argument)
 ```bash
 $ ./main.py reply "should i go for a walk"
 perhaps
@@ -74,27 +74,64 @@ $ ./main.py reply "hey tofu should i watch a movie or read a book"
 the latter
 $
 ```
-Direct input/output:
+- Direct Chat (stdin/stdout)
+
 ```bash
 $ ./main.py chat # starts a 'chat' interface where the user uses cli input and the responses would be the cli output
 should i stop working on this project
 nah
 hmm very nice
+
 will this take off
 maybe
 ```
 
-\* When using `chat`, one line of input always corresponds to one line of output, so you can use standard input and output to process live data.
+- JSON (stdin/stdout)
 
-Query category info:
 ```bash
-$ ./main.py countyn "should i sleep or study" # gets number of separate options that could be answered as yes/no individually
-2
-$ ./main.py countyn "wow that's great"
-0
-$
+$ ./main.py jsonio #starts a jsonio interface where all inputs and outputs are in json format
+{"type": "status"}
+{"primaryMood": 0.8611740675984976, "moodStability": 0.5333479168955446, "exposedPositivity": 0.0, "positivityOverload": false}
+{"type": "message", "contents": "hello tofu!"}
+{"response": "hello!", "primaryMood": 0.8618000236179784, "moodStability": 0.5333479168955446, "exposedPositivity": 0.167442, "positivityOverload": false}
+{"type": "message", "contents": "are you happy today?"}
+{"response": "yes indeed", "primaryMood": 0.8657104146664363, "moodStability": 0.5333479168955446, "exposedPositivity": 0.32403, "positivityOverload": false}
+{"type": "message", "contents": "good to know :D"}
+{"response": null, "primaryMood": 0.8734032228190116, "moodStability": 0.5333479168955446, "exposedPositivity": 0.45097, "positivityOverload": false}
+dummy broken data
+{"error": "malformed data", "response": null}
 ```
-Process chat history (format: `[<datetime>] <user>: <message>`)
+
+Accepts json input in the format:
+```json
+{
+    "type"     : "status" | "private message" | "silent group message" | "group message" | "message",
+    "contents"?: string
+}
+```
+
+Returns a json output in the format:
+```json
+{
+    "primaryMood"        : number,
+    "moodStability"      : number,
+    "exposedPositivity"  : number,
+    "positivityOverload" : bool,
+    "response"           : string | null
+}
+```
+
+or, if an error occurs:
+```json
+{
+    "error"              : string,
+    "response"           : string | null
+}
+```
+
+\* When using `chat` or `jsonio`, one line of standard input always corresponds to one line of standard output.
+
+- Process chat history (format: `[<datetime>] <user>: <message>`)
 ```bash
 $ ./main.py emulate message_history.txt
 - john:
@@ -105,7 +142,7 @@ nah
 
 ```
 
-Retrain Sentiment Analysis Model:
+- Retrain Sentiment Analysis Model:
 ```bash
 $ python3 sentiment_analysis.py
 ```

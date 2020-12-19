@@ -52,7 +52,7 @@ __YN_QN_SETLIST  = [
 ]
 __STD_QN_SETLIST = [
     {'WP', 'WP$', 'WRB', 'WDT'},
-    {'MD', 'VB', 'VBP', 'VBZ', 'VBD', 'PRP', 'PRP$', 'NNS', 'NN', 'NNP', 'NNPS', 'JJ'}
+    {'MD', 'VB', 'VBP', 'VBZ', 'VBD', 'PRP', 'PRP$', 'NNS', 'NN', 'NNP', 'NNPS', 'JJ', 'IN'}
 ]
 
 __QUERY_TYPES = ['YN_QN', 'STD_QN']
@@ -200,7 +200,7 @@ class Understanding:
             tok, tag = toktag
             if was_noun and tag_in_set(tag, ['VERB', 'ADVERB', 'ADJECTIVE']):
                 predicate_idx = i
-            was_noun = tag_in_set(tag, ['DETERMINER', 'NOUN']) or tag in ('VBG',)
+            was_noun = tag_in_set(tag, ['DETERMINER', 'NOUN']) or tag in ('VBG','IN')
 
         if predicate_idx is None:
             return ([], toktags[:])

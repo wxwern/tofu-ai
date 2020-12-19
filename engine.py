@@ -70,6 +70,7 @@ class Responder:
         if D_QUERIES:
             res = Understanding.parse_queries(s, merge_results=True)
             res["queries"] = list(map(lambda x: (Understanding.unparse_sentence(x[0]), x[1]), res["queries"]))
+            res["statements"] = list(map(lambda x: (Understanding.unparse_sentence(x[0]), x[1]), res["statements"]))
             if res["subject_call"] is not None:
                 res["subject_call"] = Understanding.unparse_sentence(res["subject_call"])
             return 'Sentence Queries: `%s`' % str(res)

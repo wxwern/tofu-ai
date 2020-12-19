@@ -117,11 +117,14 @@ class Understanding:
                     return results
 
                 queries = []
+                statements = []
                 for result in results:
                     queries.extend(result["queries"])
+                    statements.extend(result["statements"])
 
                 merged_results = {
                     "queries": queries,
+                    "statements": statements,
                     "subject_call": results[0]["subject_call"],
                     "target_summoned": results[0]["target_summoned"]
                 }
@@ -129,11 +132,11 @@ class Understanding:
 
 
         queries = []
+        statements = []
 
         first_portion_ynqn = False
         sentence_portions = sentences[0] if sentences else []
         for i, portion in enumerate(sentence_portions):
-
             selected_query_type = None
             for query_type in get_query_types():
                 if simple_sentence_is_type(portion, query_type):
@@ -159,11 +162,17 @@ class Understanding:
             # but i am lazy
             if i == 0 and selected_query_type == 'YN_QN':
                 first_portion_ynqn = True
+
             if i > 0 and first_portion_ynqn and not selected_query_type:
                 queries.append((portion, 'YN_QN'))
+                continue
+
+            if not selected_query_type:
+                statements.append((portion, 'SM'))
 
         return {
             "queries": queries,
+            "statements": statements,
             "subject_call": subject_call_tokens,
             "target_summoned": target_summoned
         }

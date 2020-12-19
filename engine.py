@@ -170,6 +170,7 @@ class Responder:
 
         subject_call = parsed_result["subject_call"]
         queries = parsed_result["queries"]
+        statements = parsed_result["statements"]
         tofu_tagged = Understanding.is_target_tagged(s)
         tofu_targeted = parsed_result["target_summoned"] or autoanswer_level >= 3
 
@@ -185,7 +186,7 @@ class Responder:
         #
         # Greetings
         #
-        if subject_call is not None and queries == [] and tofu_targeted:
+        if subject_call is not None and queries == [] and statements == [] and tofu_targeted:
             #greeting likely
             now = datetime.datetime.now()
 
@@ -338,15 +339,40 @@ class Responder:
                             if (tofu_tagged or random.random() <= w_response_chance):
                                 return random.choice(w_response)
 
-        if autoanswer_level >= 4:
-            if mood >= 0.4:
+        roll = random.random()
+        if autoanswer_level >= 4 or (autoanswer_level >= 2 and roll > 0.95) or (tofu_targeted and roll > 0.75):
+            if mood >= 0.3:
+                x = Sentience.determineMessagePositivity(s)
+                if x >= 0.6:
+                    return random.choice([
+                        'ay',
+                        'nice',
+                        ':D',
+                        'yay',
+                        'heh',
+                        'haha',
+                        'lol',
+                    ])
+
+                if x < 0:
+                    return random.choice([
+                        'oof',
+                        'ono',
+                        'uh',
+                        'oops',
+                        'sad',
+                        ':(',
+                        '.-.',
+                    ])
+
                 return random.choice([
                     'hmm',
                     'ah',
+                    'hm',
                     'oof',
-                    'hm'
                     'interesting',
                 ])
+
 
             return random.choice(['o', 'meh', 'm', '.'])
 

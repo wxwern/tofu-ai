@@ -52,8 +52,6 @@ class Sentience:
         random.seed(time.time())
         return ans
 
-
-
     __exposed_positivity = 0.0
     __last_message_exposure = 0.0
     __positivity_overload = False

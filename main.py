@@ -28,7 +28,7 @@ if __name__ == "__main__":
                 print('* BOT tofu2 (emulated autoreply):\n' + x)
                 print()
     elif argv[1] == 'reply' and len(argv) >= 3:
-        reply = Responder.generate_response(argv[2])
+        reply = Responder.generate_response(argv[2], autoanswer_level=4)
         if reply is not None:
             print(reply)
     elif argv[1] == 'chat':

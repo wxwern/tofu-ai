@@ -18,9 +18,9 @@ def _get_message_combos():
                 (['ping'], ['pong', 'pong ping?', 'pong?', 'pong'], 0.9),
                 (['pong'], ['ping', 'ping pong' , 'pong?', 'ping'], 0.9),
                 (['hi', 'hello', 'helo', 'halo', 'hola', 'hai', 'hoi'], ['hello!', 'hi!', 'こんにちは!'], 0.2),
-                (['oof'], ['oof'], 0.2),
+                (['oof'], ['oof'], 0.1),
                 ([':D', ':)', '(:', ':-)', ':>'], [':)', ':D'], 0.2),
-                (['xd', 'lol', 'lmao', 'lmfao', 'haha'], ['lol', 'haha', 'ahaha', 'heh', 'lol', 'hm yes very funny', 'XD'], 0.15)
+                (['xd', 'lol', 'lmao', 'lmfao', 'haha'], ['lol', 'haha', 'ahaha', 'heh', 'lol', 'hm yes very funny', 'XD'], 0.1)
         ]
 
         for words, responses, chance in message_combos:
@@ -346,7 +346,7 @@ class Responder:
                         if w in combos:
                             w_response, w_response_chance = combos[w]
                             if autoanswer_level >= 3:
-                                w_response_chance **= 0.5
+                                w_response_chance **= 0.25
                             if (tofu_tagged or random.random() <= w_response_chance):
                                 return random.choice(w_response)
 

@@ -303,7 +303,7 @@ class Sentience:
         random.seed((time.time()//86400*86400))
 
         #sleeping
-        if not (8 <= hour < 22) and mood <= 0.5:
+        if not (9 <= hour < 21) and (mood <= 0.5 or not 7 <= hour < 23):
             if exp_mood < -0.1:
                 return random.choice([
                     "bleh",
@@ -390,8 +390,8 @@ class Sentience:
 
     @staticmethod
     def getDebugInfo():
-        return "Current Mood Positivity : %6.1f%%;\nMood Stability          : %6.1f%%;\nExposed Positivity      : %6.1f%%%s;" % \
-            (Sentience.getPrimaryMood()*100, Sentience.getMoodStability()*100, Sentience.getExposedPositivity()*100, " (positivity overload)" if Sentience.isExposedPositivityOverloaded() else "")
+        return "Status Message          : %s;\nCurrent Mood Positivity : %6.1f%%;\nMood Stability          : %6.1f%%;\nExposed Positivity      : %6.1f%%%s;" % \
+            (Sentience.getStatusMessage(), Sentience.getPrimaryMood()*100, Sentience.getMoodStability()*100, Sentience.getExposedPositivity()*100, " (positivity overload)" if Sentience.isExposedPositivityOverloaded() else "")
 
     @staticmethod
     def getDebugInfoDict():

@@ -88,10 +88,18 @@ class Responder:
         Accepts json input in the format:
         ```
         {
-            "type"     : "status" | "private message" | "silent group message" | "group message" | "message",
+            "type"     : "status" | "private message" | "group message" | "no-spam message" | "readonly message" | "message",
             "contents"?: string
         }
         ```
+
+        Types are:
+        - `"message"                `: default for chats; respond sometimes if possible.
+        - `"readonly message"       `: only reads messages; never respond.
+        - `"no-spam message"        `: for non-spam/non-bot chats; only respond if called by name.
+        - `"group message"          `: optimized for bot group chats; respond sometimes if possible.
+        - `"private message"        `: optimized for bot direct messages; always try to respond.
+
 
         Returns a json output in the format:
         ```
@@ -123,12 +131,14 @@ class Responder:
 
             autoanswer_level = 0
             contents = str(data["contents"] if "contents" in data else None)
-            if t == "private message":
-                autoanswer_level = 4
-            if t == "silent group message":
+            if t == "no-spam message":
                 autoanswer_level = 1
+            if t == "readonly message":
+                autoanswer_level = 0
             if t in ("group message", "message"):
                 autoanswer_level = 2
+            if t == "private message":
+                autoanswer_level = 4
         except:
             err = {"error": "malformed data"}
             res["response"] = None
@@ -152,7 +162,7 @@ class Responder:
 
         autoanswer_level:
         - 0: Do not answer except for debug calls
-        - 1: Only respond rarely
+        - 1: Only respond if called by name
         - 2: Respond sometimes if confident
         - 3: Respond whenever possible
         - 4: Always respond

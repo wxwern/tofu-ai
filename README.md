@@ -106,10 +106,17 @@ dummy broken data
 Accepts json input in the format:
 ```ts
 {
-    "type"     : "status" | "private message" | "silent group message" | "group message" | "message",
+    "type"     : "status" | "message" | "private message" | "group message" | "silent message" | "readonly message",
     "contents"?: string
 }
 ```
+
+The types are for the following situations:
+- `"message"                `: default for chats; respond sometimes if possible.
+- `"readonly message"       `: only reads messages; never respond.
+- `"no-spam message"        `: for non-spam/non-bot chats; only respond if called by name.
+- `"group message"          `: optimized for bot group chats; respond sometimes if possible.
+- `"private message"        `: optimized for bot direct messages; always try to respond.
 
 Returns a json output in the format:
 ```ts

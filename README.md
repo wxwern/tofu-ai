@@ -121,12 +121,12 @@ The types are for the following situations:
 Returns a json output in the format:
 ```ts
 {
+    "response"           : string | null,
     "statusMessage"      : string,
     "primaryMood"        : number,
     "moodStability"      : number,
     "exposedPositivity"  : number,
-    "positivityOverload" : boolean,
-    "response"           : string | null
+    "positivityOverload" : boolean
 }
 ```
 

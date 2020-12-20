@@ -127,7 +127,7 @@ class Responder:
             t = data["type"].lower()
             if t == "status":
                 info = Sentience.getDebugInfoDict()
-                return json.dumps(info)
+                return json.dumps({**info, **res})
 
             autoanswer_level = 0
             contents = str(data["contents"] if "contents" in data else None)

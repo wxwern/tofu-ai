@@ -106,7 +106,7 @@ dummy broken data
 Accepts json input in the format:
 ```ts
 {
-    "type"     : "status" | "message" | "private message" | "group message" | "silent message" | "readonly message",
+    "type"     : "status" | "message" | "private message" | "group message" | "no-spam message" | "readonly message",
     "contents"?: string
 }
 ```

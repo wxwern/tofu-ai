@@ -160,7 +160,7 @@ class Understanding:
             # heuristics for yn question parsing
             # the ideal way would be to do more parsing
             # but i am lazy
-            if i == 0 and selected_query_type == 'YN_QN':
+            if i == 0 and selected_query_type == 'YN_QN' and portion and portion[-1][0] == 'or':
                 first_portion_ynqn = True
 
             if i > 0 and first_portion_ynqn and not selected_query_type:

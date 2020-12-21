@@ -162,7 +162,7 @@ class Responder:
 
         autoanswer_level:
         - 0: Do not answer except for debug calls
-        - 1: Only respond if called by name
+        - 1: Only respond rarely
         - 2: Respond sometimes if confident
         - 3: Respond whenever possible
         - 4: Always respond
@@ -180,10 +180,11 @@ class Responder:
         parsed_result = Understanding.parse_queries(s, merge_results=True)
 
         subject_call = parsed_result["subject_call"]
-        queries = parsed_result["queries"]
-        statements = parsed_result["statements"]
-        tofu_tagged = Understanding.is_target_tagged(s)
-        tofu_targeted = parsed_result["target_summoned"] or autoanswer_level >= 3
+        queries      = parsed_result["queries"]
+        statements   = parsed_result["statements"]
+        tofu_tagged           = Understanding.is_target_tagged(s)
+        tofu_targeted         = parsed_result["target_summoned"] or autoanswer_level >= 3
+        someone_else_targeted = not tofu_targeted and subject_call
 
         query_types = set(map(lambda x: x[1], queries))
         too_complicated = len(query_types) > 1 or len(queries) > 4
@@ -197,17 +198,17 @@ class Responder:
         #
         # Greetings
         #
-        if subject_call is not None and queries == [] and statements == [] and tofu_targeted:
+        if queries == [] and statements == [] and tofu_targeted:
             #greeting likely
             now = datetime.datetime.now()
 
             if mood > 0.3:
                 if (6 <= now.hour <= 11) and 'morning' in words:
                     return random.choice(['good morning', 'morning', 'おはよう']) + ('!' if mood > 0.75 else ('.' if mood < 0.5 else ''))
-                if (19 <= now.hour <= 23 or now.hour <= 2) and 'night' in words:
+                if (19 <= now.hour <= 23 or now.hour <= 2) and ('night' in words or 'gn' in words):
                     return random.choice(['good night', 'gn', 'おやすみ']) + ('.' if mood < 0.5 else '')
                 if 'hello' in words or 'hi' in words:
-                    if mood > 0.75:
+                    if mood > 0.7 or autoanswer_level >= 4:
                         return random.choice(['hello!', 'hi!', 'こんにちは!'])
 
             if mood <= 0.3:
@@ -241,7 +242,7 @@ class Responder:
                 "hmm",
             ])
 
-        if 'YN_QN' in query_types and (autoanswer_level >= 2 or tofu_targeted):
+        if 'YN_QN' in query_types and ((autoanswer_level >= 2 and not someone_else_targeted) or tofu_targeted):
             filtered_queries = list(filter(lambda x: x[1] == 'YN_QN', queries))
             if len(filtered_queries) == 1:
                 yes_opt = random.choice([
@@ -332,7 +333,6 @@ class Responder:
                     "option %d"
                 ]) % (chosen+1)
 
-
         #
         # Misc responses
         #
@@ -345,8 +345,15 @@ class Responder:
                     for w in [word, Understanding.remove_repeated_chars_word(word)]:
                         if w in combos:
                             w_response, w_response_chance = combos[w]
+
+                            #increase chances at higher autoanswer levels
                             if autoanswer_level >= 3:
                                 w_response_chance **= 0.25
+
+                            #lower chances at lower autoanswer levels
+                            if autoanswer_level <= 1:
+                                w_response_chance **= 3
+
                             if (tofu_tagged or random.random() <= w_response_chance):
                                 return random.choice(w_response)
 

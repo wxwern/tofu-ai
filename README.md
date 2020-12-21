@@ -114,7 +114,7 @@ Accepts json input in the format:
 The types are for the following situations:
 - `"message"                `: default for chats; respond sometimes if possible.
 - `"readonly message"       `: only reads messages; never respond.
-- `"no-spam message"        `: for non-spam/non-bot chats; only respond if called by name.
+- `"no-spam message"        `: for non-spam/non-bot chats; only respond occasionally, e.g. if called by name.
 - `"group message"          `: optimized for bot group chats; respond sometimes if possible.
 - `"private message"        `: optimized for bot direct messages; always try to respond.
 

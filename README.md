@@ -1,7 +1,6 @@
-# Tofu AI
-(formerly 'message-autoresponder')
+# tofu-ai
 
-A simple chatbot powered by NLTK.
+A simple causal chatbot powered by NLTK, with the capability to answer and respond to some types of messages.
 
 ---
 

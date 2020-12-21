@@ -1,6 +1,6 @@
 # Tofu Behaviour Wiki
 
-This page documents the general behaviour of the script - which identifies itself as *tofu* by default.
+This page documents the general behaviour of the AI - which identifies itself as *tofu* by default.
 
 ---
 ## TL;DR

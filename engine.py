@@ -1,6 +1,8 @@
 import random
 import datetime
 import json
+import os
+import hashlib
 
 from nltk.tokenize.casual import casual_tokenize
 
@@ -37,6 +39,7 @@ class Responder:
         D_SENTIENCE = s.startswith("!DEBUG_SENTIENCE")
         D_QUERIES_VB = s.startswith("!DEBUG_QUERIES_VB")
         D_QUERIES = s.startswith("!DEBUG_QUERIES")
+        D_VERSION = s.startswith("!DEBUG_VERSION")
 
         debug = False
         if s.startswith("!DEBUG"):
@@ -75,10 +78,28 @@ class Responder:
                 res["subject_call"] = Understanding.unparse_sentence(res["subject_call"])
             return 'Sentence Queries: `%s`' % str(res)
 
+        if D_VERSION:
+            return 'AI version: `' + Responder.get_version() + '`'
+
         if debug:
             return 'Invalid debug call'
 
         return None
+
+    __ai_version = None
+    @staticmethod
+    def get_version():
+        if not Responder.__ai_version:
+            try:
+                d = b""
+                get_path = lambda x: os.path.join(os.path.dirname(os.path.realpath(__file__)), x)
+                for fname in ["engine.py", "queries.py", "positivity.py", "sentiment_analysis.py"]:
+                    with open(get_path(fname), 'rb') as f:
+                        d += f.read()
+                Responder.__ai_version = hashlib.sha1(d).hexdigest()
+            except:
+                Responder.__ai_version = "unknown"
+        return Responder.__ai_version
 
     @staticmethod
     def get_info(d):
@@ -395,3 +416,10 @@ class Responder:
             return random.choice(['o', 'meh', 'm', '.'])
 
         return None
+
+#preloading
+Responder.get_version()
+
+#direct script execution
+if __name__ == "__main__" :
+    print("version: " + Responder.get_version())

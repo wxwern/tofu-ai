@@ -148,7 +148,7 @@ class Sentience:
             #subject is negative, agree if predicate is negative
             return res_pred * -1
 
-        if not isinstance(message, str) or not message.strip():
+        if not message:
             return 0.0
 
         res = getSentencePositivity(message)
@@ -333,7 +333,7 @@ class Sentience:
         if Sentience.isExposedPositivityOverloaded():
             return random.choice([
                 "i'm done",
-                "that's too much"
+                "too much"
                 "goodbye",
                 "tired",
                 "need rest",
@@ -343,14 +343,14 @@ class Sentience:
         if mood >= 0.7:
             return random.choice([
                 ":D",
-                "great day today",
+                "great day",
                 "happy happy",
                 "hehe",
                 "good times",
                 "yay",
                 "what's up",
                 "happiness",
-                "it's a nice day",
+                "nice day",
             ])
         #moody-ish
         if mood >= 0.4:
@@ -358,7 +358,7 @@ class Sentience:
                 "hmm",
                 "yeet",
                 "bleh",
-                "not happy",
+                "oh",
                 "moody rn",
                 "nothing"
             ])
@@ -420,7 +420,9 @@ class Sentience:
             return "%s\nOrigin Msg Positivity   : %6.1f%%;\nOrigin Msg Validity     : %6.1f%%;\nAgrees w/ Origin        : %6.1f%%;" % \
                 (Sentience.getDebugInfo(), ori_pos*100, ori_valid*100, res_agree*100)
 
+#preloading
 Sentience.preloadPositivityClassifier()
 
+#direct script execution
 if __name__ == "__main__" :
     print(Sentience.getDebugInfo())

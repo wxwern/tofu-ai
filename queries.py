@@ -5,7 +5,8 @@ from nltk.tokenize.casual import casual_tokenize
 IDENTITY = None
 
 #common loosely defined tag sets
-__NOUN_SET       = {'DT', 'JJ', 'NN', 'NNS', 'NNP', 'NNPS', 'PRP', 'PRP$'}
+__NOUN_SET       = {'DT', 'JJ', 'NN', 'NNS', 'NNP', 'NNPS'}
+__PRONOUN_SET    = {'PRP', 'PRP$'}
 __VERB_SET       = {'VB', 'VBP', 'VBZ', 'VBD'}
 __ADVERB_SET     = {'RB', 'RBR', 'RBS'}
 __ADJECTIVE_SET  = {'JJ', 'IN', 'MD'}
@@ -15,7 +16,7 @@ __CONNECTOR_SET  = {'CC', 'LS', ','}
 __TERMINATE_SET  = set(['.'])
 __WH_QN_SET      = {'WP', 'WP$', 'WRB', 'WDT'}
 
-__TAG_SET_TYPES = ['NOUN', 'VERB', 'ADVERB', 'ADJECTIVE', 'PARTICLE', 'DETERMINER', 'CONNECTOR', 'TERMINATE', 'WH-']
+__TAG_SET_TYPES = ['NOUN', 'PRONOUN', 'VERB', 'ADVERB', 'ADJECTIVE', 'PARTICLE', 'DETERMINER', 'CONNECTOR', 'TERMINATE', 'WH-']
 def get_tag_set_types():
     return __TAG_SET_TYPES
 
@@ -27,6 +28,7 @@ def tag_in_set(tag, st):
 
     TAG_SET_MAP = {
         'NOUN': __NOUN_SET,
+        'PRONOUN': __PRONOUN_SET,
         'VERB': __VERB_SET,
         'ADVERB': __ADVERB_SET,
         'ADJECTIVE': __ADJECTIVE_SET,
@@ -200,7 +202,7 @@ class Understanding:
             tok, tag = toktag
             if was_noun and tag_in_set(tag, ['VERB', 'ADVERB', 'ADJECTIVE']):
                 predicate_idx = i
-            was_noun = tag_in_set(tag, ['DETERMINER', 'NOUN']) or tag in ('VBG','IN')
+            was_noun = tag_in_set(tag, ['DETERMINER', 'NOUN', 'PRONOUN']) or tag in ('VBG','IN')
 
         if predicate_idx is None:
             return ([], toktags[:])
@@ -308,6 +310,9 @@ class Understanding:
             content_tokens     : list,
             target_summoned    : bool
         )
+
+        This runs on the supposition that there could be a noun acting as a subject at the start of a sentence.
+        For example, "tofu, are you okay?" or even omitting punctuation "tofu are you okay".
         '''
         if isinstance(s, tuple):
             return s

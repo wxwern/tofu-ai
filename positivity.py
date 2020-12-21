@@ -148,7 +148,7 @@ class Sentience:
             #subject is negative, agree if predicate is negative
             return res_pred * -1
 
-        if not message:
+        if not isinstance(message, str) or not message.strip():
             return 0.0
 
         res = getSentencePositivity(message)

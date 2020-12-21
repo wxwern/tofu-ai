@@ -47,7 +47,7 @@ class Responder:
             s = ' '.join(s.split(' ')[1:]).strip()
 
         if D_SENTIENCE:
-            x = Sentience.getDebugInfoAfterMessage(Understanding.parse_sentence_subject_predicate(s)).replace('\n',' ')
+            x = Sentience.getDebugInfoAfterMessage(s).replace('\n',' ')
             x2 = ' '
             for c in x:
                 if c != ' ' or x2[-1] != ' ':

@@ -362,7 +362,11 @@ class Responder:
                 return random.choice(['hmm i heard my name', 'hmmmm', 'interesting', 'hm'])
             if len(words) <= 5:
                 combos = _get_message_combos()
-                for word in words:
+
+                words_copy = words.copy()
+                random.shuffle(words_copy)
+
+                for word in words_copy:
                     for w in [word, Understanding.remove_repeated_chars_word(word)]:
                         if w in combos:
                             w_response, w_response_chance = combos[w]
@@ -377,8 +381,11 @@ class Responder:
 
                             if (tofu_tagged or random.random() <= w_response_chance):
                                 return random.choice(w_response)
+                            break
 
         roll = random.random()
+        if Sentience.isExposedPositivityOverloaded():
+            roll **= 2
         if autoanswer_level >= 4 or (autoanswer_level >= 2 and roll > 0.95) or (tofu_targeted and roll > 0.75):
             if mood >= 0.3:
                 x = Sentience.determineMessagePositivity(s)
